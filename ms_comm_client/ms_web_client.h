@@ -4,7 +4,7 @@
 #include "lib/web_sock/inter_sock.hpp"
 #include "ux_protocol.h"
 #include "ux_manage.h"
-#include "log_show.h"
+#include "lib/vlog.hpp"
 
 #include <string>
 #include <fstream>
@@ -22,11 +22,11 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 using std::bind;
 
-class ms_web_client : protected inter_client
+class ms_web_client : public inter_client
 {
 public:
     explicit ms_web_client();
-    int open_client(string ip = "127.0.0.1",int port = 5005,int thread = 1);
+//    int open_client(string ip = "127.0.0.1",int port = 5005,int thread = 1);
 
     int ask_register(string passwd);
     int ask_login(long long account,string passwd);
@@ -51,15 +51,18 @@ protected:
     void back_swap_file(const string& meg);//文件交换
     //===== 任务函数 =====
 
-    bool is_working = true;//启动标记
-    queue<function<void()>> queue_task;//任务队列
-    std::mutex cv_lock;//操作变量前准备锁
-    std::condition_variable cv_var;//条件变量--等待唤醒
-    void work_thread();//任务线程
+//    bool is_working = true;//启动标记
+//    queue<function<void()>> queue_task;//任务队列
+//    std::mutex cv_lock;//操作变量前准备锁
+//    std::condition_variable cv_var;//条件变量--等待唤醒
+//    void work_thread();//任务线程
 
     void on_open() override;
     void on_message(const string& meg) override;
     void on_close() override;
+
+    int send_meg(const string& meg);
+
 };
 
 #endif // MS_WEB_CLIENT_H

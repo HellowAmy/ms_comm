@@ -1,18 +1,15 @@
-#ifndef UX_MANAGE_H
+﻿#ifndef UX_MANAGE_H
 #define UX_MANAGE_H
 
 #include <time.h>
 #include <string.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
+//#include <unistd.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 
-#include <iostream>
 #include <fstream>
 #include <map>
 
-using std::cout;
-using std::endl;
 using std::getline;
 using std::fstream;
 using std::string;

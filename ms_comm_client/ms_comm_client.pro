@@ -16,6 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    lib/vlog.cpp \
     main.cpp \
     ms_web_client.cpp \
     net_connect.cpp \
@@ -23,6 +24,7 @@ SOURCES += \
     widget.cpp
 
 HEADERS += \
+    lib/vlog.hpp \
     lib/web_sock/include/AsyncHttpClient.h \
     lib/web_sock/include/Buffer.h \
     lib/web_sock/include/Channel.h \
@@ -93,7 +95,6 @@ HEADERS += \
     lib/web_sock/include/singleton.h \
     lib/web_sock/include/wsdef.h \
     lib/web_sock/inter_sock.hpp \
-    log_show.h \
     ms_web_client.h \
     net_connect.h \
     ux_manage.h \

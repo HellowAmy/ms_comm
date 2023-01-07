@@ -1,7 +1,11 @@
 ﻿#include "ux_web_server.h"
+#include "lib/vlog.hpp"
 
 ux_web_server::ux_web_server()
 {
+    vflog::instance()->init(vflog::e_info);//日志初始化
+
+    //加载登录账号文件
     file_account = "../data/account.txt";
     ux_manage::load_account(file_account,map_account);
 
@@ -25,20 +29,9 @@ ux_web_server::ux_web_server()
 
 }
 
-int ux_web_server::open_server(int port,int thread)
-{
-    vlog<<"port: "<<port<<" | thread: "<<thread<<endl;
-    for(int i=0;i<thread;i++)
-    {
-        std::thread th_temp(&ux_web_server::work_thread,this);
-        th_temp.detach();
-    }
-    return this->open(port);
-}
-
 void ux_web_server::on_open(const web_sock &sock, const web_http &http)
 {
-    vlog<<"on_open"<<endl;
+    vlogf<<"on_open"<<endl;
 }
 
 void ux_web_server::on_message(const web_sock &sock, const string &meg)
@@ -49,30 +42,30 @@ void ux_web_server::on_message(const web_sock &sock, const string &meg)
     auto it_find = map_func.find(cmd);
     if(it_find != map_func.end())
     {
-        vlog<<"on_message:type:"<<cmd<<endl;
-        function<void()> func = std::bind(it_find->second,sock,meg);
-        queue_task.push(func);
-        cv_var.notify_one();
+        vlogf<<"on_message:type:"<<cmd<<endl;
+        (std::bind(it_find->second,sock,meg))();//执行任务
     }
-    else vlog<<"on_message: not find"<<endl;
+    else vlogw<<"on_message: not find"<<endl;
 }
 
 void ux_web_server::on_close(const web_sock &sock)
 {
-    for(auto a:map_connect)
+    unique_lock<mutex> lock(lock_connect);
+    for_it(it,map_connect)
     {
-        if(a.second == sock)
+        if(it->second != nullptr)
         {
-            map_connect.erase(a.first);
-            break;
+            if(it->second->isConnected() == false)
+                { map_connect.erase(it); break; }
         }
+        else map_connect.erase(it);
     }
-    vlog<<"on_close:map_connect size: "<<map_connect.size()<<endl;
+    vlogd<<"on_close:map_connect size: "<<map_connect.size()<<endl;
 }
 
 void ux_web_server::task_register(const web_sock &sock, const std::string &meg)
 {
-    vlog<<"task_register:in"<<endl;
+    vlogf<<"task_register:in"<<endl;
 
     ct_register ct;
     enum_transmit cmd;
@@ -80,6 +73,7 @@ void ux_web_server::task_register(const web_sock &sock, const std::string &meg)
 
     //add_account: 账号插入到容器，并返回账号
     ct_register_back ct_back;
+    unique_lock<mutex> lock(lock_account);
     if(ux_manage::add_account(map_account,ct.passwd,ct_back.account))
     {
         strncpy(ct_back.passwd,ct.passwd,sizeof(ct.passwd));
@@ -90,33 +84,30 @@ void ux_web_server::task_register(const web_sock &sock, const std::string &meg)
     //反馈到客户端
     string str = ux_manage::to_str<enum_transmit,ct_register_back>
             (enum_transmit::e_register_back,ct_back);
-    sock->send(str.c_str(),str.size());
+    if(send_back(sock,str) <= 0) vlogw<<"send error"<<endl;
 }
 
 void ux_web_server::task_login(const web_sock &sock, const std::string &meg)
 {
-    vlog<<"task_login:in"<<endl;
-
+    vlogf<<"task_login:in | isConnected: "<<sock->isConnected()<<endl;
     ct_login ct;
     enum_transmit cmd;
     ux_manage::from_str<enum_transmit,ct_login>(meg,cmd,ct);
+    vlogf<<"|account: "<<ct.account<<"|passwd: "<<ct.passwd<<endl;
 
     //添加到连接队列
     ct_login_back ct_back;
-    if(ux_manage::add_connect<const web_sock &>
+    unique_lock<mutex> lock(lock_connect);
+    if(ux_manage::add_connect<web_sock>
             (map_connect,ct.account,sock)) { ct_back.flg = 1; }
     else ct_back.flg = 0;
 
     //反馈到客户端
     string str = ux_manage::to_str<enum_transmit,ct_login_back>
             (enum_transmit::e_login_back,ct_back);
-    sock->send(str.c_str(),str.size());
+    if(send_back(sock,str) <= 0) vlogw<<"send error"<<endl;
 
-    vlog<<"task_login:map_connect size: "<<map_connect.size()<<endl;
-    for(auto a:map_connect)
-    {
-        vlog<<a.first<<endl;
-    }
+    vlogf<<"task_login size: "<<map_connect.size()<<endl;
 }
 
 void ux_web_server::task_error(const web_sock &sock, const std::string &meg)
@@ -126,17 +117,19 @@ void ux_web_server::task_error(const web_sock &sock, const std::string &meg)
 
 void ux_web_server::task_swap_txt(const web_sock &sock, const std::string &meg)
 {
-    vlog<<"task_swap_txt"<<endl;
-
+    vlogf<<"task_swap_txt"<<endl;
     ct_swap_txt ct;
     enum_transmit cmd;
     ux_manage::from_str<enum_transmit,ct_swap_txt>(meg,cmd,ct);
+    vlogf<<"|to: "<<ct.account_to<<"|from: "<<ct.account_from<<"|data: "<<ct.data<<endl;
 
     auto it = map_connect.find(ct.account_to);
-    if(it != map_connect.end()) { it->second->send(meg.c_str(),meg.size()); }
+    if(it != map_connect.end())
+        { vlogf<<"it->second: "<<it->second->isConnected()<<endl;
+        if(send_back(it->second,meg) <= 0){vlogw<<"send error"<<endl;} }
     else
     {
-        vlog<<"task_swap_txt:not find account"<<endl;
+        vlogf<<"task_swap_txt:not find account"<<endl;
         ct_error err;
         err.account = ct.account_to;
         strncpy(err.error,"error: task_swap_txt",sizeof(err.error));
@@ -144,23 +137,24 @@ void ux_web_server::task_swap_txt(const web_sock &sock, const std::string &meg)
         //错误反馈
         string str = ux_manage::to_str<enum_transmit,ct_error>
                 (enum_transmit::e_error,err);
-        sock->send(str.c_str(),str.size());
+        if(send_back(sock,str) <= 0) vlogw<<"send error"<<endl;
     }
 }
 
 void ux_web_server::task_swap_file(const web_sock &sock, const std::string &meg)
 {
-    vlog<<"task_swap_file"<<endl;
-
+    vlogf<<"task_swap_file"<<endl;
     ct_swap_file ct;
     enum_transmit cmd;
     ux_manage::from_str<enum_transmit,ct_swap_file>(meg,cmd,ct);
+    vlogf<<"|to: "<<ct.account_to<<"|from: "<<ct.account_from<<endl;
 
     auto it = map_connect.find(ct.account_to);
-    if(it != map_connect.end()) { it->second->send(meg.c_str(),meg.size()); }
+    if(it != map_connect.end())
+        { if(send_back(it->second,meg) <= 0){vlogw<<"send error"<<endl;} }
     else
     {
-        vlog<<"task_swap_file:not find account"<<endl;
+        vlogf<<"task_swap_file:not find account"<<endl;
         ct_error err;
         err.account = ct.account_to;
         strncpy(err.error,"error: task_swap_file",sizeof(err.error));
@@ -168,25 +162,15 @@ void ux_web_server::task_swap_file(const web_sock &sock, const std::string &meg)
         //错误反馈
         string str = ux_manage::to_str<enum_transmit,ct_error>
                 (enum_transmit::e_error,err);
-        sock->send(str.c_str(),str.size());
+        if(send_back(sock,str) <= 0) vlogw<<"send error"<<endl;
     }
 }
 
-void ux_web_server::work_thread()
+int ux_web_server::send_back(const web_sock &sock,const std::string &str)
 {
-    vlog<<"work_thread - thread id: "<<std::this_thread::get_id()<<endl;
-
-    while(is_working)
-    {
-        function<void()> func;
-        {
-            //上锁--避免多线程竞争,函数返回真则启动唤醒
-            std::unique_lock<std::mutex> lock (cv_lock);
-            while(queue_task.empty()) cv_var.wait(lock);
-
-            func = queue_task.front();
-            queue_task.pop();
-        }
-        func();
-    }
+    std::unique_lock<mutex> lock(lock_send);
+    int ret = 0;
+    if(sock->isConnected()) ret = sock->send(str.c_str(),str.size());
+    else vlogw<<"isConnected is false"<<endl;
+    return ret;
 }

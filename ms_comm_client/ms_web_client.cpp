@@ -1,7 +1,16 @@
 ﻿#include "ms_web_client.h"
+//#include "lib/vlog.hpp"
+//#include <iostream>
+//using namespace std;
+//#define vlogf std::cout
+//#define vlogw std::cout
+
+
 
 ms_web_client::ms_web_client()
 {
+    vflog::instance()->init(vflog::e_info);
+
     //===== 添加任务函数到容器 =====
     //账号注册
     map_func.insert(pair<enum_transmit,function<void(const string&)>>
@@ -21,54 +30,58 @@ ms_web_client::ms_web_client()
     //===== 添加任务函数到容器 =====
 }
 
-int ms_web_client::open_client(string ip,int port, int thread)
-{
-    vlog<<"port: "<<port<<" | thread: "<<thread<<endl;
-    for(int i=0;i<thread;i++)
-    {
-        std::thread th_temp(&ms_web_client::work_thread,this);
-        th_temp.detach();
-    }
-    return this->open(ip,port);
-}
+//int ms_web_client::open_client(string ip,int port, int thread)
+//{
+//    vlog<<"port: "<<port<<" | thread: "<<thread<<endl;
+//    for(int i=0;i<thread;i++)
+//    {
+//        std::thread th_temp(&ms_web_client::work_thread,this);
+//        th_temp.detach();
+//    }
+//    return this->open(ip,port);
+//}
 
 int ms_web_client::ask_register(std::string passwd)
 {
-    vlog<<"ask_register"<<endl;
+    vlogf<<"ask_register"<<endl;
     ct_register ct;
     strncpy(ct.passwd,passwd.c_str(),sizeof(ct.passwd));
     string str = ux_manage::to_str<enum_transmit,ct_register>
             (enum_transmit::e_register,ct);
-    return this->sock().send(str.c_str(),str.size());
+//    return this->sock().send(str.c_str(),str.size());
+    return send_meg(str);
 }
 
 int ms_web_client::ask_login(long long account, std::string passwd)
 {
-    vlog<<"ask_login"<<endl;
+    vlogf<<"ask_login"<<endl;
     ct_login ct;
     ct.account = account;
     strncpy(ct.passwd,passwd.c_str(),sizeof(ct.passwd));
     string str = ux_manage::to_str<enum_transmit,ct_login>
             (enum_transmit::e_login,ct);
-    return this->sock().send(str.c_str(),str.size());
+    return send_meg(str);
+//    return this->sock().send(str.c_str(),str.size());
 }
 
 int ms_web_client::ask_swap_txt
     (long long account_from, long long account_to, std::string txt)
 {
-    vlog<<"ask_swap_txt"<<endl;
+    vlogf<<"ask_swap_txt"<<endl;
     ct_swap_txt ct;
     ct.account_from = account_from;
     ct.account_to = account_to;
     strncpy(ct.data,txt.c_str(),sizeof(ct.data));
     string str = ux_manage::to_str<enum_transmit,ct_swap_txt>
             (enum_transmit::e_swap_txt,ct);
-    return this->sock().send(str.c_str(),str.size());
+    return send_meg(str);
+//    return this->sock().send(str.c_str(),str.size());
 }
 
-void ms_web_client::ask_swap_file(long long account_from,long long account_to,std::string filename)
+void ms_web_client::ask_swap_file
+    (long long account_from,long long account_to,std::string filename)
 {
-    vlog<<"ask_swap_file"<<endl;
+    vlogf<<"ask_swap_file"<<endl;
     auto func = [=](long long account_from,long long account_to,std::string filename)
     {
         ct_swap_file ct;
@@ -95,7 +108,10 @@ void ms_web_client::ask_swap_file(long long account_from,long long account_to,st
 
                 string str = ux_manage::to_str<enum_transmit,ct_swap_file>
                         (enum_transmit::e_swap_file,ct);
-                this->sock().send(str.c_str(),str.size());
+                if(send_meg(str) <= 0)
+                    { vlogw<<"ask_swap_file :send close"<<endl; break; }
+
+//                this->sock().send(str.c_str(),str.size());
             }
             ofs.close();
         }
@@ -107,13 +123,13 @@ void ms_web_client::ask_swap_file(long long account_from,long long account_to,st
 
 void ms_web_client::on_open()
 {
-    vlog<<"on_open"<<endl;
+    vlogf<<"on_open"<<endl;
     if(func_open) func_open();
 }
 
 void ms_web_client::on_message(const std::string &meg)
 {
-    vlog<<"on_message:in"<<endl;
+    vlogf<<"on_message:in"<<endl;
 
     //执行匹配的任务函数
     enum_transmit cmd = *(enum_transmit*)
@@ -121,22 +137,30 @@ void ms_web_client::on_message(const std::string &meg)
     auto it_find = map_func.find(cmd);
     if(it_find != map_func.end())
     {
-        vlog<<"on_message:type: "<<cmd<<endl;
-        function<void()> func = std::bind(it_find->second,meg);
-        queue_task.push(func);
-        cv_var.notify_one();
+        vlogf<<"on_message:type: "<<cmd<<endl;
+        /*function<void()> func = */(std::bind(it_find->second,meg))();
+//        queue_task.push(func);
+//        cv_var.notify_one();
     }
-    else vlog<<"on_message:not find"<<endl;
+    else vlogw<<"on_message:not find"<<endl;
 }
 
 void ms_web_client::on_close()
 {
-    vlog<<"on_close"<<endl;
+    vlogf<<"on_close"<<endl;
+}
+//#include <iostream>
+int ms_web_client::send_meg(const std::string &meg)
+{
+    int ret = 0;
+    if(this->sock().isConnected()) this->sock().send(meg.c_str(),meg.size());
+    else vlogw<<"isConnected false"<<endl;
+    return ret;
 }
 
 void ms_web_client::back_register(const std::string &meg)
 {
-    vlog<<"back_register"<<endl;
+    vlogf<<"back_register"<<endl;
     ct_register_back ct;
     enum_transmit cmd;
     ux_manage::from_str<enum_transmit,ct_register_back>(meg,cmd,ct);
@@ -145,7 +169,7 @@ void ms_web_client::back_register(const std::string &meg)
 
 void ms_web_client::back_login(const std::string &meg)
 {
-    vlog<<"back_login"<<endl;
+    vlogf<<"back_login"<<endl;
     ct_login_back ct;
     enum_transmit cmd;
     ux_manage::from_str<enum_transmit,ct_login_back>(meg,cmd,ct);
@@ -159,7 +183,7 @@ void ms_web_client::back_error(const std::string &meg)
 
 void ms_web_client::back_swap_txt(const std::string &meg)
 {
-    vlog<<"back_swap_txt"<<endl;
+    vlogf<<"back_swap_txt"<<endl;
     ct_swap_txt ct;
     enum_transmit cmd;
     ux_manage::from_str<enum_transmit,ct_swap_txt>(meg,cmd,ct);
@@ -168,7 +192,7 @@ void ms_web_client::back_swap_txt(const std::string &meg)
 
 void ms_web_client::back_swap_file(const std::string &meg)
 {
-    vlog<<"back_swap_file"<<endl;
+    vlogf<<"back_swap_file"<<endl;
     ct_swap_file ct;
     enum_transmit cmd;
     ux_manage::from_str<enum_transmit,ct_swap_file>(meg,cmd,ct);
@@ -191,24 +215,24 @@ void ms_web_client::back_swap_file(const std::string &meg)
         it->second.open(it->first,ios::out | ios::binary | ios::app);
         if(it->second.is_open()) it->second.write(ct.buf,ct.buf_size);
     }
-    else vlog<<"back_swap_file:recv file buf error"<<endl;
+    else vlogf<<"back_swap_file:recv file buf error"<<endl;
 }
 
-void ms_web_client::work_thread()
-{
-    vlog<<"work_thread - thread id: "<<std::this_thread::get_id()<<endl;
+//void ms_web_client::work_thread()
+//{
+//    vlogf<<"work_thread - thread id: "<<std::this_thread::get_id()<<endl;
 
-    while(is_working)
-    {
-        function<void()> func;
-        {
-            //上锁--避免多线程竞争,函数返回真则启动唤醒
-            std::unique_lock<std::mutex> lock (cv_lock);
-            while(queue_task.empty()) cv_var.wait(lock);
+//    while(is_working)
+//    {
+//        function<void()> func;
+//        {
+//            //上锁--避免多线程竞争,函数返回真则启动唤醒
+//            std::unique_lock<std::mutex> lock (cv_lock);
+//            while(queue_task.empty()) cv_var.wait(lock);
 
-            func = queue_task.front();
-            queue_task.pop();
-        }
-        func();
-    }
-}
+//            func = queue_task.front();
+//            queue_task.pop();
+//        }
+//        func();
+//    }
+//}

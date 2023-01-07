@@ -14,6 +14,7 @@ DISTFILES += \
     lib/web_sock/lib/libhv.so
 
 HEADERS += \
+    lib/vlog.hpp \
     lib/web_sock/include/AsyncHttpClient.h \
     lib/web_sock/include/Buffer.h \
     lib/web_sock/include/Channel.h \
@@ -84,7 +85,6 @@ HEADERS += \
     lib/web_sock/include/singleton.h \
     lib/web_sock/include/wsdef.h \
     lib/web_sock/inter_sock.hpp \
-    log_show.h \
     ux_manage.h \
     ux_protocol.h \
     ux_web_server.h

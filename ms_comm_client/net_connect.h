@@ -3,6 +3,9 @@
 
 #include <QObject>
 
+//#include <iostream>
+//using namespace std;
+
 #include "ms_web_client.h"
 
 class net_connect : public QObject
@@ -10,19 +13,20 @@ class net_connect : public QObject
     Q_OBJECT
 public:
     explicit net_connect(QObject *parent = nullptr);
-    void init(string ip = "127.0.0.1",int port = 5005,int thread = 1);
-    void open(long long account,string passwd);
+//    void init(string ip = "127.0.0.1",int port = 5005,int thread = 1);
+    int open_client(long long account,string passwd,
+                     string ip = "127.0.0.1",int port = 5005);
     bool send_txt(long long account_to,string txt);
     bool send_file(long long account_to,string filename);
-    bool isf_connect();
+//    bool isf_connect();
 
 signals:
     emit void fa_login_status(bool ok);
-    emit void fa_swap_txt(long long from,string txt);
-    emit void fa_swap_files(long long from,string filename);
+    emit void fa_swap_txt(long long from,QString txt);
+    emit void fa_swap_files(long long from,QString filename);
 
 protected:
-    bool is_connect = false;
+//    bool is_connect = false;
     long long v_account = 0;
     string v_passwd;
 

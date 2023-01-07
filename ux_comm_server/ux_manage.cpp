@@ -1,4 +1,4 @@
-#include "ux_manage.h"
+﻿#include "ux_manage.h"
 
 ux_manage::ux_manage()
 {
@@ -71,19 +71,6 @@ bool ux_manage::load_account
     return is_ok;
 }
 
-long long ux_manage::add_account
-    (map<long long, std::string> &map_account,string passwd)
-{
-    long long account = 0;
-    for(int i=0;i<100;i++)
-    {
-        account = ux_manage::rand_account();
-        auto it = map_account.insert(pair<long long ,string>(account,passwd));
-        if(it.second == true) break;
-    }
-    return account;
-}
-
 bool ux_manage::add_account
     (map<long long, std::string> &map_account,
      const std::string &passwd, long long &ret_account)
@@ -91,20 +78,13 @@ bool ux_manage::add_account
     for(int i=0;i<100;i++)
     {
         ret_account = ux_manage::rand_account();
-        auto it = map_account.insert(pair<long long ,string>(ret_account,passwd));
-        if(it.second == true) return true;
+        if(map_account.find(ret_account) == map_account.end())
+        {
+            map_account.insert(pair<long long ,string>(ret_account,passwd));
+            return true;
+        }
     }
     return false;
 }
-
-//bool ux_manage::add_connect
-//    (map<long long, int> &map_connect, long long account, int fd)
-//{
-//    auto it = map_connect.insert(pair<long long ,int>(account,fd));
-//    return it.second;
-//}
-
-
-
 
 

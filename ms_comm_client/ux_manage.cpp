@@ -1,4 +1,4 @@
-#include "ux_manage.h"
+﻿#include "ux_manage.h"
 
 ux_manage::ux_manage()
 {
@@ -38,7 +38,7 @@ bool ux_manage::save_account
     {
         for(const auto &a:map_account)
         {
-            ofs<<a.first<<a.second<<endl;
+            ofs<<a.first<<a.second<<std::endl;
         }
         is_ok = true;
         ofs.close();
@@ -91,11 +91,8 @@ bool ux_manage::add_account
     for(int i=0;i<100;i++)
     {
         ret_account = ux_manage::rand_account();
-        if(map_account.find(ret_account) == map_account.end())
-        {
-            map_account.insert(pair<long long ,string>(ret_account,passwd));
-            return true;
-        }
+        auto it = map_account.insert(pair<long long ,string>(ret_account,passwd));
+        if(it.second == true) return true;
     }
     return false;
 }

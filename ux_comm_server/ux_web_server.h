@@ -3,7 +3,6 @@
 
 #include "lib/web_sock/inter_sock.hpp"
 #include "ux_protocol.h"
-#include "log_show.h"
 #include "ux_manage.h"
 
 #include <iostream>
@@ -17,6 +16,7 @@
 #include <iostream>
 
 using std::function;
+using std::unique_lock;
 using std::string;
 using std::map;
 using std::pair;
@@ -28,11 +28,11 @@ using std::placeholders::_2;
 using std::bind;
 using std::ref;
 
-class ux_web_server : protected inter_server
+class ux_web_server : public inter_server
 {
 public:
     ux_web_server();
-    int open_server(int port = 5005,int thread = 1);
+//    int open_server(int port = 5005,int thread = 8);
 
 protected:
     void on_open(const web_sock& sock, const web_http& http) override;
@@ -41,7 +41,7 @@ protected:
 
     string file_account;
     map<long long,string> map_account;//已存在的账号密码
-    map<long long,const web_sock&> map_connect;//已连接账号
+    map<long long,web_sock> map_connect;//已连接账号
 
     //任务函数
     map<enum_transmit,
@@ -55,12 +55,10 @@ protected:
     void task_swap_file(const web_sock& sock, const string& meg);//文件交换
     //===== 任务函数 =====
 
-
-    bool is_working = true;//启动标记
-    queue<function<void()>> queue_task;//任务队列
-    std::mutex cv_lock;//操作变量前准备锁
-    std::condition_variable cv_var;//条件变量--等待唤醒
-    void work_thread();//任务线程
+    std::mutex lock_account;
+    std::mutex lock_connect;
+    std::mutex lock_send;
+    int send_back(const web_sock &sock,const string &str);
 };
 
 #endif // UX_WEB_SERVER_H
