@@ -4,6 +4,7 @@
 net_connect::net_connect(QObject *parent)
 {
     vflog::instance()->init(vflog::e_info);
+    vflog::instance()->close_log(false,false);
 }
 
 int net_connect::open_client
@@ -38,36 +39,9 @@ bool net_connect::send_txt(long long account_to, std::string txt)
     else return false;
 }
 
-bool net_connect::send_file(long long account_to, std::string filename)
+void net_connect::send_file(long long account_to, std::string filename)
 {
-
-//    if(is_connect) web_c.ask_swap_file(v_account,account_to,filename);
-//    else return false;
-    return true;
+    web_c.ask_swap_file(v_account,account_to,filename);
 }
 
-//bool net_connect::isf_connect()
-//{
-////    return is_connect;
-//}
-
-//void net_connect::work_thread()
-//{
-//    vlog<<"work_thread - thread id: "<<std::this_thread::get_id()<<endl;
-
-//    while(is_working)
-//    {
-//        function<void()> func;
-//        {
-//            //上锁--避免多线程竞争,函数返回真则启动唤醒
-//            std::unique_lock<std::mutex> lock (cv_lock);
-//            while(queue_task.empty()) cv_var.wait(lock);
-
-//            func = queue_task.front();
-//            queue_task.pop();
-//        }
-//        func();
-//        vlog<<"func"<<endl;
-//    }
-//}
 

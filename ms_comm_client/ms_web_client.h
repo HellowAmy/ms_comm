@@ -5,14 +5,17 @@
 #include "ux_protocol.h"
 #include "ux_manage.h"
 #include "lib/vlog.hpp"
+#include "lib/str_c.hpp"
 
 #include <string>
 #include <fstream>
 #include <thread>
 #include <queue>
 #include <map>
+#include <memory>
 #include <condition_variable>
 
+using std::shared_ptr;
 using std::string;
 using std::thread;
 using std::map;
@@ -26,7 +29,7 @@ class ms_web_client : public inter_client
 {
 public:
     explicit ms_web_client();
-//    int open_client(string ip = "127.0.0.1",int port = 5005,int thread = 1);
+    void set_file_path(string path = "D:\\test\\");
 
     int ask_register(string passwd);
     int ask_login(long long account,string passwd);
@@ -40,7 +43,8 @@ public:
     function<void(long long from,long long to,string filename)> func_swap_file = nullptr;
 
 protected:
-    map<string,fstream> map_ofs;//文件名和读取流
+    string v_path_files;
+    map<string,fstream*> map_ofs;//文件名和读取流
     map<enum_transmit,function<void(const string&)>> map_func;//任务函数
 
     //===== 任务函数 =====
@@ -51,17 +55,12 @@ protected:
     void back_swap_file(const string& meg);//文件交换
     //===== 任务函数 =====
 
-//    bool is_working = true;//启动标记
-//    queue<function<void()>> queue_task;//任务队列
-//    std::mutex cv_lock;//操作变量前准备锁
-//    std::condition_variable cv_var;//条件变量--等待唤醒
-//    void work_thread();//任务线程
-
     void on_open() override;
     void on_message(const string& meg) override;
     void on_close() override;
 
     int send_meg(const string& meg);
+    bool write_file(fstream* ofs,const char *buf,int size);
 
 };
 

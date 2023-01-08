@@ -24,6 +24,7 @@ SOURCES += \
     widget.cpp
 
 HEADERS += \
+    lib/str_c.hpp \
     lib/vlog.hpp \
     lib/web_sock/include/AsyncHttpClient.h \
     lib/web_sock/include/Buffer.h \
@@ -113,6 +114,11 @@ DISTFILES += \
     lib/web_sock/lib/libhv.dll.a \
     lib/web_sock/lib/libhv.so \
     lib/web_sock/lib/libhv_static.a
+
+#win32: LIBS += -L$$PWD/lib/web_sock/lib/ -llibhv.dll
+
+#INCLUDEPATH += $$PWD/lib/web_sock/include
+#DEPENDPATH += $$PWD/lib/web_sock/include
 
 win32: LIBS += -L$$PWD/lib/web_sock/lib/ -llibhv.dll
 

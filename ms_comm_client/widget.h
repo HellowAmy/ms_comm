@@ -21,10 +21,14 @@ public:
     void open_c(long long ac,string pa);
 
     QPushButton *butt;
+    QPushButton *butt_f;
+    QPushButton *butt_in;
     QLabel *lab;
     QLabel *lab_t;
     QLineEdit *edit;
+    QLineEdit *edit_f;
     QLineEdit *edit_account;
+    QLineEdit *edit_in;
     net_connect *net;
 };
 #endif // WIDGET_H
