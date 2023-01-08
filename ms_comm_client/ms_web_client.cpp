@@ -68,12 +68,14 @@ void ms_web_client::ask_swap_file
     (long long account_from,long long account_to,std::string filename)
 {
 
-    vflog::instance()->set_level(vflog::e_warning,vflog::e_warning);//vflog::e_warning
-    vflog::instance()->close_log(false,true);
+
     vlogf<<"ask_swap_file:in"<<endl;
     vlogf<<"|"<<account_from<<"|"<<account_to<<"|"<<filename<<endl;
     auto func = [=](long long account_from,long long account_to,std::string filename)
     {
+        vflog::instance()->set_level(vflog::e_warning,vflog::e_warning);//vflog::e_warning
+        vflog::instance()->close_log(false,true);
+
         vlogf<<"func:in"<<endl;
         bool is_err = false;
         ct_swap_file ct;
@@ -109,11 +111,21 @@ void ms_web_client::ask_swap_file
                 string str = ux_manage::to_str<enum_transmit,ct_swap_file>
                         (enum_transmit::e_swap_file,ct);
                 int send_size = send_meg(str);
-                if(send_size <= 0)
+
+
+
+
+                if(send_size == 0)
                 {
-                    vlogw<<"ask_swap_file :send close"<<endl;
-                    is_err = true; break;
+                    size_t size_now = this->sock().channel->writeBufsize();
+//                    this->sock().
+//                    vlogw<<"sinow_: "<<size_now<<endl;
+                    if(size_now > WRITE_BUFSIZE_HIGH_WATER)
+                    { for(long long i=0;i<10000000;i++){} }
+//                    vlogw<<"ask_swap_file :send close"<<endl;
+//                    is_err = true; break;
                 }
+                else if(send_size == -1) { break; }
                 vlogf<<"send_size:"<<send_size<<endl;
             }
             ofs.close();
@@ -126,11 +138,11 @@ void ms_web_client::ask_swap_file
 
     };
 
-    func(account_from,account_to,filename);
-    vflog::instance()->close_log(false,false);
-    vflog::instance()->init(vflog::e_info);
-//    std::thread th(func,account_from,account_to,filename);
-//    th.join();
+//    func(account_from,account_to,filename);
+//    vflog::instance()->close_log(false,false);
+//    vflog::instance()->init(vflog::e_info);
+    std::thread th(func,account_from,account_to,filename);
+    th.detach();
     vlogf<<"ask_swap_file:out"<<endl;
 }
 
@@ -166,9 +178,9 @@ void ms_web_client::on_close()
 int ms_web_client::send_meg(const std::string &meg)
 {
     vflog::instance()->close_log(false,true);
-    int ret = -1;
+    int ret = 0;
     if(this->sock().isConnected()) ret = this->sock().send(meg.c_str(),meg.size());
-    else vlogw<<"isConnected false"<<endl;
+    else { vlogw<<"isConnected false"<<endl; ret = -1; }
     return ret;
 }
 

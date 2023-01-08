@@ -42,17 +42,18 @@ void ux_web_server::on_message(const web_sock &sock, const string &meg)
     auto it_find = map_func.find(cmd);
     if(it_find != map_func.end())
     {
-        vlogf<<"on_message:type:"<<cmd<<endl;
-        vflog::instance()->close_log(false,true);
+//        vflog::instance()->close_log(false,false);
+//        vlogf<<"on_message:type:"<<cmd<<endl;
+//        vflog::instance()->close_log(false,true);
         (std::bind(it_find->second,sock,meg))();//执行任务
-        vflog::instance()->close_log(false,false);
+//        vflog::instance()->close_log(false,false);
     }
     else vlogw<<"on_message: not find"<<endl;
 }
 
 void ux_web_server::on_close(const web_sock &sock)
 {
-    vflog::instance()->close_log(false,true);
+//    vflog::instance()->close_log(false,true);
     unique_lock<mutex> lock(lock_connect);
     for_it(it,map_connect)
     {
@@ -64,7 +65,7 @@ void ux_web_server::on_close(const web_sock &sock)
         else map_connect.erase(it);
     }
     vlogd<<"on_close:map_connect size: "<<map_connect.size()<<endl;
-    vflog::instance()->close_log(false,false);
+//    vflog::instance()->close_log(false,false);
 }
 
 void ux_web_server::task_register(const web_sock &sock, const std::string &meg)
@@ -169,6 +170,7 @@ void ux_web_server::task_swap_file(const web_sock &sock, const std::string &meg)
                 (enum_transmit::e_error,err);
         if(send_back(sock,str) <= 0) vlogw<<"send error"<<endl;
     }
+    vflog::instance()->close_log(false,true);
 }
 
 int ux_web_server::send_back(const web_sock &sock,const std::string &str)

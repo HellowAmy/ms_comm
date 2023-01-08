@@ -2,6 +2,9 @@
 #define MS_WEB_CLIENT_H
 
 #include "lib/web_sock/inter_sock.hpp"
+#include "lib/web_sock/include/hloop.h"
+//#include "lib/web_sock/include/event/hevent.h"
+#include "lib/web_sock/include/Channel.h"
 #include "ux_protocol.h"
 #include "ux_manage.h"
 #include "lib/vlog.hpp"
@@ -24,6 +27,9 @@ using std::condition_variable;
 using std::placeholders::_1;
 using std::placeholders::_2;
 using std::bind;
+//struct hio_t;
+
+#define WRITE_BUFSIZE_HIGH_WATER    (1U << 23)  // 8M
 
 class ms_web_client : public inter_client
 {
