@@ -97,14 +97,5 @@ bool ux_manage::add_account
     return false;
 }
 
-//bool ux_manage::add_connect
-//    (map<long long, int> &map_connect, long long account, int fd)
-//{
-//    auto it = map_connect.insert(pair<long long ,int>(account,fd));
-//    return it.second;
-//}
-
-
-
 
 

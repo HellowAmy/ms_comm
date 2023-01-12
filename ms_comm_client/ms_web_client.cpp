@@ -2,8 +2,8 @@
 
 ms_web_client::ms_web_client()
 {
-    vflog::instance()->init(vflog::e_info);
-    vflog::instance()->close_log(false,false);
+    vinit_c(vlog::e_info);
+
     set_file_path();
 
     //===== 添加任务函数到容器 =====
@@ -32,7 +32,7 @@ void ms_web_client::set_file_path(std::string path)
 
 int ms_web_client::ask_register(std::string passwd)
 {
-    vlogf<<"ask_register"<<endl;
+    vlogf("ask_register");
     ct_register ct;
     strncpy(ct.passwd,passwd.c_str(),sizeof(ct.passwd));
     string str = ux_manage::to_str<enum_transmit,ct_register>
@@ -42,7 +42,7 @@ int ms_web_client::ask_register(std::string passwd)
 
 int ms_web_client::ask_login(long long account, std::string passwd)
 {
-    vlogf<<"ask_login"<<endl;
+    vlogf("ask_login");
     ct_login ct;
     ct.account = account;
     strncpy(ct.passwd,passwd.c_str(),sizeof(ct.passwd));
@@ -54,7 +54,7 @@ int ms_web_client::ask_login(long long account, std::string passwd)
 int ms_web_client::ask_swap_txt
     (long long account_from, long long account_to, std::string txt)
 {
-    vlogf<<"ask_swap_txt"<<endl;
+    vlogf("ask_swap_txt");
     ct_swap_txt ct;
     ct.account_from = account_from;
     ct.account_to = account_to;
@@ -67,16 +67,12 @@ int ms_web_client::ask_swap_txt
 void ms_web_client::ask_swap_file
     (long long account_from,long long account_to,std::string filename)
 {
-
-
-    vlogf<<"ask_swap_file:in"<<endl;
-    vlogf<<"|"<<account_from<<"|"<<account_to<<"|"<<filename<<endl;
+    vlogf("ask_swap_file");
+    vlogf(v(account_from) v(account_to) v(filename));
     auto func = [=](long long account_from,long long account_to,std::string filename)
     {
-        vflog::instance()->set_level(vflog::e_warning,vflog::e_warning);//vflog::e_warning
-        vflog::instance()->close_log(false,true);
-
-        vlogf<<"func:in"<<endl;
+        vlevel(vlog::e_warning,vlog::e_warning);
+        vlogf("func:in");
         bool is_err = false;
         ct_swap_file ct;
         ct.account_from = account_from;
@@ -85,18 +81,16 @@ void ms_web_client::ask_swap_file
         fstream ofs(filename,ios::in | ios::binary);
         if(ofs.is_open())
         {
-            vlogf<<"ofs.is_open(): "<<filename<<endl;
+            vlogf("is_open");
             ofs.seekg(0,ios::end);
             ct.lenght = ofs.tellg();
             ofs.seekg(0,ios::beg);
 
-            string temp = tools::stm(filename)("\\",-1,-1);
+            string temp = vts::stm(filename)("\\",-1,-1);
             strncpy(ct.filename,temp.c_str(),sizeof(ct.filename));
 
-
-
             long long size_sum = 0;
-            while(ofs.eof() == false)
+            while(ofs.eof() == false && this->sock().isConnected())
             {
                 //发送文件时状态
                 if(ofs.tellg() == 0) ct.status = 0;
@@ -106,56 +100,58 @@ void ms_web_client::ask_swap_file
                 ct.buf_size = ofs.gcount();//记录发送真实字节
                 size_sum += ofs.gcount();//累计发送字节
                 if(size_sum == ct.lenght) ct.status = 2;//最后一次发送
-                vlogf<<"size_sum:"<<size_sum<<"|"<<ct.lenght<<endl;
+                vlogf(v(size_sum) v(ct.lenght));
 
                 string str = ux_manage::to_str<enum_transmit,ct_swap_file>
                         (enum_transmit::e_swap_file,ct);
                 int send_size = send_meg(str);
-
-
-
-
                 if(send_size == 0)
                 {
                     size_t size_now = this->sock().channel->writeBufsize();
-//                    this->sock().
-//                    vlogw<<"sinow_: "<<size_now<<endl;
                     if(size_now > WRITE_BUFSIZE_HIGH_WATER)
-                    { for(long long i=0;i<10000000;i++){} }
-//                    vlogw<<"ask_swap_file :send close"<<endl;
-//                    is_err = true; break;
+                    {
+                        for(int i=0;i<100000000;i++)
+                        {
+                            if(this->sock().isConnected() == false)
+                                { is_err = true; break; }
+
+                            size_t temp = this->sock().channel->writeBufsize();
+                            if(temp < WRITE_BUFSIZE_HIGH_WATER/8)
+                                { vlogw("break high line"); break; }
+                            else if(temp > WRITE_BUFSIZE_HIGH_WATER*2)
+                                { vlogw("out high line"); }
+                        }
+                    }
                 }
-                else if(send_size == -1) { break; }
-                vlogf<<"send_size:"<<send_size<<endl;
+                else if(send_size == -1) { vlogw("send flase"); is_err = true; break; }
             }
             ofs.close();
-            if(is_err) vlogw<<"ask_swap_file is error: "<<is_err<<endl;
-            else vlogf<<"send finish for file"<<endl;
+            vlogw("close: " v(is_err));
         }
-        else vlogw<<"ask_swap_file open false"<<filename<<endl;
-        vlogf<<"func:out|err: "<<is_err<<endl;
-
-
+        else vlogw("open false: " v(filename));
+        vlevel(vlog::e_info,vlog::e_info);
     };
 
-//    func(account_from,account_to,filename);
-//    vflog::instance()->close_log(false,false);
-//    vflog::instance()->init(vflog::e_info);
     std::thread th(func,account_from,account_to,filename);
     th.detach();
-    vlogf<<"ask_swap_file:out"<<endl;
+    vlogw("thread detach: out");
+}
+
+bool ms_web_client::is_connect()
+{
+    return this->sock().isConnected();
 }
 
 void ms_web_client::on_open()
 {
-    vlogf<<"on_open"<<endl;
+    vlogf("on_open");
     if(func_open) func_open();
 }
 
 void ms_web_client::on_message(const std::string &meg)
 {
-//    vflog::instance()->close_log(false,true);
-    vlogf<<"get_id:"<<std::this_thread::get_id()<<endl;
+    vlevel(vlog::e_warning,vlog::e_warning);
+    vlogf("on_message: " v(std::this_thread::get_id()));
 
     //执行匹配的任务函数
     enum_transmit cmd = *(enum_transmit*)
@@ -163,37 +159,36 @@ void ms_web_client::on_message(const std::string &meg)
     auto it_find = map_func.find(cmd);
     if(it_find != map_func.end())
     {
-        vlogf<<"on_message:type: "<<cmd<<endl;
+        vlogf("on_message type: " v(cmd));
         (std::bind(it_find->second,meg))();
     }
-    else vlogw<<"on_message:not find"<<endl;
-//    vflog::instance()->close_log(false,false);
+    else vlogw("on_message:not find");
 }
 
 void ms_web_client::on_close()
 {
-    vlogf<<"on_close"<<endl;
+    vlogw("on_close");
+    if(func_close) func_close();
 }
 
 int ms_web_client::send_meg(const std::string &meg)
 {
-    vflog::instance()->close_log(false,true);
     int ret = 0;
     if(this->sock().isConnected()) ret = this->sock().send(meg.c_str(),meg.size());
-    else { vlogw<<"isConnected false"<<endl; ret = -1; }
+    else { vlogw("isConnected false"); ret = -1; }
     return ret;
 }
 
-bool ms_web_client::write_file(std::fstream *ofs, const char *buf, int size)
+bool ms_web_client::write_file(shared_ptr<std::fstream> sp_ofs, const char *buf, int size)
 {
-    ofs->write(buf,size);
-    if(ofs->fail()) { vlogw<<"write_file false"<<endl; return false; }
+    sp_ofs->write(buf,size);
+    if(sp_ofs->fail()) { vlogw("write_file false"); return false; }
     else return true;
 }
 
 void ms_web_client::back_register(const std::string &meg)
 {
-    vlogf<<"back_register"<<endl;
+    vlogf("back_register");
     ct_register_back ct;
     enum_transmit cmd;
     ux_manage::from_str<enum_transmit,ct_register_back>(meg,cmd,ct);
@@ -202,7 +197,7 @@ void ms_web_client::back_register(const std::string &meg)
 
 void ms_web_client::back_login(const std::string &meg)
 {
-    vlogf<<"back_login"<<endl;
+    vlogf("back_login");
     ct_login_back ct;
     enum_transmit cmd;
     ux_manage::from_str<enum_transmit,ct_login_back>(meg,cmd,ct);
@@ -216,7 +211,7 @@ void ms_web_client::back_error(const std::string &meg)
 
 void ms_web_client::back_swap_txt(const std::string &meg)
 {
-    vlogf<<"back_swap_txt"<<endl;
+    vlogf("back_swap_txt");
     ct_swap_txt ct;
     enum_transmit cmd;
     ux_manage::from_str<enum_transmit,ct_swap_txt>(meg,cmd,ct);
@@ -225,7 +220,6 @@ void ms_web_client::back_swap_txt(const std::string &meg)
 
 void ms_web_client::back_swap_file(const std::string &meg)
 {
-    vlogf<<"back_swap_file"<<endl;
     ct_swap_file ct;
     enum_transmit cmd;
     ux_manage::from_str<enum_transmit,ct_swap_file>(meg,cmd,ct);
@@ -234,47 +228,43 @@ void ms_web_client::back_swap_file(const std::string &meg)
     auto it = map_ofs.find(ct.filename);
     if(it == map_ofs.end())
     {
-        vlogf<<"creator fstream"<<endl;
-        map_ofs.insert(pair<string,fstream*>(ct.filename,new fstream));
+        vlogw("creator fstream: " v(ct.filename));
+        map_ofs.insert(pair<string,shared_ptr<fstream>>
+                       (ct.filename,std::make_shared<fstream>()));
         it = map_ofs.find(ct.filename);
-        if(it == map_ofs.end()) { vlogf<<"insert false and return"<<endl; return; }
+        if(it == map_ofs.end()) { vlogw("creator fstream false"); return; }
     }
-
-    vflog::instance()->close_log(false,true);
 
     //接受状态
     if(ct.status == 1 && it->second->is_open())
     {
         if(write_file(it->second,ct.buf,ct.buf_size) == false)
-            { vlogw<<"write_file false and return"<<endl; return; };
+            { vlogw("write_file and return: " v(ct.status)); return; };
     }
     else if(ct.status == 2 && it->second->is_open())
     {
         if(write_file(it->second,ct.buf,ct.buf_size) == false)
-            { vlogw<<"write_file false and return"<<endl; };
+            { vlogw("write_file: " v(ct.status)); return; };
         it->second->close();
+        map_ofs.erase(it);
 
-        vlogf<<"swap finish"<<endl;
+        vlogw("func_swap_file" v(ct.status));
         if(func_swap_file) func_swap_file(ct.account_from,ct.account_to,ct.filename);
     }
     else if(ct.status == 0)
     {
         //首次进入清空文件
+        vlogw("func_swap_file open: " v(v_path_files + it->first));
         it->second->open(v_path_files + it->first,ios::out);
         if(it->second->is_open()) it->second->close();
 
         it->second->open(v_path_files + it->first,ios::out|ios::binary|ios::app);
         if(it->second->is_open())
         {
-            vlogf<<"open: "<<v_path_files + it->first<<endl;
             if(write_file(it->second,ct.buf,ct.buf_size) == false)
-                { vlogw<<"write_file false and return"<<endl; };
+                { vlogw("write_file: " v(ct.status)); };
         }
-        else vlogw<<"file not open"<<endl;
-        vlogf<<"it->second->open: "<<v_path_files + it->first<<endl;
+        else vlogw("file not open");
     }
-    else vlogw<<"swap_file error|open: "<<it->second->is_open()<<"|status: "<<ct.status<<endl;
-
-    vflog::instance()->close_log(false,false);
-//    if(it->second->is_open() == false) map_ofs.erase(it);
+    else vlogw("swap_file error" v(it->second->is_open()) v(ct.status));
 }

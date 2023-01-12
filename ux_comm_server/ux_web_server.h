@@ -2,6 +2,7 @@
 #define UX_WEB_SERVER_H
 
 #include "lib/web_sock/inter_sock.hpp"
+#include "lib/vts/vts.h"
 #include "ux_protocol.h"
 #include "ux_manage.h"
 
@@ -15,6 +16,7 @@
 #include <queue>
 #include <iostream>
 
+using vts::vlog;
 using std::function;
 using std::unique_lock;
 using std::string;
@@ -32,7 +34,6 @@ class ux_web_server : public inter_server
 {
 public:
     ux_web_server();
-//    int open_server(int port = 5005,int thread = 8);
 
 protected:
     void on_open(const web_sock& sock, const web_http& http) override;
@@ -42,6 +43,8 @@ protected:
     string file_account;
     map<long long,string> map_account;//已存在的账号密码
     map<long long,web_sock> map_connect;//已连接账号
+
+    void move_connect();
 
     //任务函数
     map<enum_transmit,

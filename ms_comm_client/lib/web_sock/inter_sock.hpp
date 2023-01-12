@@ -1,4 +1,4 @@
-#ifndef INTER_SOCK_H
+﻿#ifndef INTER_SOCK_H
 #define INTER_SOCK_H
 
 #include "include/WebSocketServer.h"
@@ -95,7 +95,9 @@ public:
         reconn.min_delay = 1000;
         reconn.max_delay = 2000;
         reconn.delay_policy = 1;
-        sock_client.setReconnect(&reconn);
+//        sock_client.setReconnect(&reconn);
+        sock_client.setReconnect(nullptr);
+
 
         string temp = "ws://"+ip+":"+to_string(port)+"/"+txt;
         return sock_client.open(temp.c_str());

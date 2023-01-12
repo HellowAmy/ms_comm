@@ -4,17 +4,18 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += \
+        lib/vts/vts.cpp \
         main.cpp \
         ux_manage.cpp \
         ux_web_server.cpp
 
-DISTFILES += \
-    data/account.txt \
-    lib/web_sock/lib/libhv.a \
-    lib/web_sock/lib/libhv.so
+#DISTFILES += \
+#    data/account.txt \
+#    lib/web_sock/lib/libhv.a \
+#    lib/web_sock/lib/libhv.so
 
 HEADERS += \
-    lib/vlog.hpp \
+    lib/vts/vts.h \
     lib/web_sock/include/AsyncHttpClient.h \
     lib/web_sock/include/Buffer.h \
     lib/web_sock/include/Channel.h \
@@ -90,6 +91,11 @@ HEADERS += \
     ux_web_server.h
 
 #unix:!macx: LIBS += -L$$PWD/lib/web_sock/lib/ -lhv
+
+#INCLUDEPATH += $$PWD/lib/web_sock/include
+#DEPENDPATH += $$PWD/lib/web_sock/include
+
+#win32: LIBS += -L$$PWD/lib/web_sock/lib/ -llibhv.dll
 
 #INCLUDEPATH += $$PWD/lib/web_sock/include
 #DEPENDPATH += $$PWD/lib/web_sock/include

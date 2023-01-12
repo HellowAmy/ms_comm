@@ -40,10 +40,6 @@ public:
     static bool add_account(map<long long,string> &map_account,
                             const string &passwd,long long &ret_account);
 
-//    //账号和fd插入到容器连接队列
-//    static bool add_connect(map<long long,int> &map_connect,
-//                            long long account,int fd);
-
     //账号和fd插入到容器连接队列
     template<class T>
     static bool add_connect(map<long long,T> &map_connect,long long account,T sock)
