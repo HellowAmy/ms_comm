@@ -6,7 +6,8 @@ ux_web_server::ux_web_server()
 
     //加载登录账号文件
     file_account = "../data/account.txt";
-    ux_manage::load_account(file_account,map_account);
+    if(ux_manage::load_account(file_account,map_account) == false)
+        { vloge("load_account error: " v(file_account)); };
 
     //===== 添加任务函数到容器 =====
     //账号注册
@@ -158,11 +159,9 @@ void ux_web_server::task_swap_file(const web_sock &sock, const std::string &meg)
         if(send_back(it->second,meg) == -1)
         {
             move_connect();
-            vlogw("task_swap_file: " v(ct.account_to) v(ct.account_from));
-            vlogw("send to client error");
+            vloge("send to client error: " v(ct.account_to) v(ct.account_from));
         }
     }
-//    else vlogw("task_swap_file: map_connect not find");
     vlevel(vlog::e_info,vlog::e_info);
 }
 

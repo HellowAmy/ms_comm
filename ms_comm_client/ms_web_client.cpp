@@ -131,7 +131,7 @@ void ms_web_client::ask_swap_file
 
     std::thread th(func,account_from,account_to,filename);
     th.detach();
-    vlogw("thread detach: out");
+    vlogf("thread detach: out");
 }
 
 bool ms_web_client::is_connect()
@@ -149,6 +149,7 @@ void ms_web_client::on_message(const std::string &meg)
 {
     vlevel(vlog::e_warning,vlog::e_warning);
     vlogf("on_message: " v(std::this_thread::get_id()));
+//    vlogw(v(std::this_thread::get_id()));
 
     //执行匹配的任务函数
     enum_transmit cmd = *(enum_transmit*)
@@ -164,6 +165,7 @@ void ms_web_client::on_message(const std::string &meg)
 
 void ms_web_client::on_close()
 {
+    for_it(it,map_ofs) { it->second->close(); }
     vlogw("on_close");
     if(func_close) func_close();
 }
@@ -179,7 +181,7 @@ int ms_web_client::send_meg(const std::string &meg)
 bool ms_web_client::write_file(shared_ptr<std::fstream> sp_ofs, const char *buf, int size)
 {
     sp_ofs->write(buf,size);
-    if(sp_ofs->bad()) { vlogw("write_err"); sp_ofs->close(); return false; }
+    if(sp_ofs->bad()) { vloge("write_err");  return false; }//sp_ofs->close();
     else return true;
 }
 
@@ -221,16 +223,22 @@ void ms_web_client::back_swap_file(const std::string &meg)
     enum_transmit cmd;
     ux_manage::from_str<enum_transmit,ct_swap_file>(meg,cmd,ct);
 
+//    static long long sian = 0;
+//    sian += ct.buf_size;
+//    vlogw("long long sian: " v(sian));
+
     //同名文件同时传输导致内容混乱并发生错误
     auto it = map_ofs.find(ct.filename);
     if(it == map_ofs.end())
     {
         if(ct.status == 0)
         {
+            //首次进入时先插入文件对象，再将对象重新定位到操作符
             vlogw("creator fstream: " v(ct.filename));
-            auto it_ok = map_ofs.insert(pair<string,shared_ptr<fstream>>
+            map_ofs.insert(pair<string,shared_ptr<fstream>>
                            (ct.filename,std::make_shared<fstream>()));
-            if(it_ok.second == false) { vlogw("creator fstream false"); return; }
+            it = map_ofs.find(ct.filename);//重新定位到操作符
+            if(it == map_ofs.end()) { vloge("creator fstream false"); return; }
         }
         else { vloge("swap error: " v(ct.filename)); return; }
     }
@@ -240,6 +248,7 @@ void ms_web_client::back_swap_file(const std::string &meg)
     {
         if(write_file(it->second,ct.buf,ct.buf_size) == false)
             { map_ofs.erase(it); return; }
+//        vlogw("long long sian: " v(sian));
     }
     else if(ct.status == 2 && it->second->is_open())
     {
@@ -254,12 +263,13 @@ void ms_web_client::back_swap_file(const std::string &meg)
     else if(ct.status == 0)
     {
         //首次进入清空文件
-        vlogw("func_swap_file open: " v(v_path_files + it->first));
+        vlogw("first open: " v(v_path_files + it->first) v(it->second));
         it->second->open(v_path_files + it->first,ios::out|ios::binary);
         if(it->second->is_open())
         {
             if(write_file(it->second,ct.buf,ct.buf_size) == false)
                 { map_ofs.erase(it); return; }
+            vlogw("is_open and write: " v(it->second));
         }
         else vlogw("file not open");
     }
