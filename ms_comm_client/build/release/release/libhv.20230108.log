@@ -1,6 +1,0 @@
-2023-01-08 00:22:21.748 INFO  ws://127.0.0.1:5005/ [WebSocketClient.cpp:40:open]
-2023-01-08 00:22:21.748 INFO  EventLoopThread started, tid=4700 [G:/lib/libhv/evpp/EventLoopThread.h:86:loop_thread]
-2023-01-08 00:22:37.789 WARN  try_write failed, enqueue! [nio.c:502:hio_write]
-2023-01-08 00:25:12.799 INFO  ws://127.0.0.1:5005/ [WebSocketClient.cpp:40:open]
-2023-01-08 00:25:12.801 INFO  EventLoopThread started, tid=6200 [G:/lib/libhv/evpp/EventLoopThread.h:86:loop_thread]
-2023-01-08 00:25:21.940 WARN  try_write failed, enqueue! [nio.c:502:hio_write]
