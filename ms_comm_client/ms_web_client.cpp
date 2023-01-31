@@ -71,7 +71,6 @@ void ms_web_client::ask_swap_file
     vlogf(v(account_from) v(account_to) v(filename));
     auto func = [=](long long account_from,long long account_to,std::string filename)
     {
-        vlevel(vlog::e_warning,vlog::e_warning);
         vlogf("func:in");
         bool is_err = false;
         ct_swap_file ct;
@@ -100,7 +99,6 @@ void ms_web_client::ask_swap_file
                 ct.buf_size = ofs.gcount();//记录发送真实字节
                 size_sum += ofs.gcount();//累计发送字节
                 if(size_sum == ct.lenght) ct.status = 2;//最后一次发送
-                vlogf(v(size_sum) v(ct.lenght));
 
                 string str = ux_manage::to_str<enum_transmit,ct_swap_file>
                         (enum_transmit::e_swap_file,ct);
@@ -110,7 +108,7 @@ void ms_web_client::ask_swap_file
                     size_t size_now = this->sock().channel->writeBufsize();
                     if(size_now > WRITE_BUFSIZE_HIGH_WATER)
                     {
-                        for(int i=0;i<100000000;i++)
+                        for(int i=0;i<1000000;i++)
                         {
                             if(this->sock().isConnected() == false)
                                 { is_err = true; break; }
@@ -123,13 +121,12 @@ void ms_web_client::ask_swap_file
                         }
                     }
                 }
-                else if(send_size == -1) { vlogw("send flase"); is_err = true; break; }
+                else if(send_size == -1) { vlogw("send flase"); is_err = true; return; }
             }
             ofs.close();
             vlogw("close: " v(is_err));
         }
         else vlogw("open false: " v(filename));
-        vlevel(vlog::e_info,vlog::e_info);
     };
 
     std::thread th(func,account_from,account_to,filename);
@@ -182,7 +179,7 @@ int ms_web_client::send_meg(const std::string &meg)
 bool ms_web_client::write_file(shared_ptr<std::fstream> sp_ofs, const char *buf, int size)
 {
     sp_ofs->write(buf,size);
-    if(sp_ofs->fail()) { vlogw("write_file false"); return false; }
+    if(sp_ofs->bad()) { vlogw("write_err"); sp_ofs->close(); return false; }
     else return true;
 }
 
@@ -228,23 +225,26 @@ void ms_web_client::back_swap_file(const std::string &meg)
     auto it = map_ofs.find(ct.filename);
     if(it == map_ofs.end())
     {
-        vlogw("creator fstream: " v(ct.filename));
-        map_ofs.insert(pair<string,shared_ptr<fstream>>
-                       (ct.filename,std::make_shared<fstream>()));
-        it = map_ofs.find(ct.filename);
-        if(it == map_ofs.end()) { vlogw("creator fstream false"); return; }
+        if(ct.status == 0)
+        {
+            vlogw("creator fstream: " v(ct.filename));
+            auto it_ok = map_ofs.insert(pair<string,shared_ptr<fstream>>
+                           (ct.filename,std::make_shared<fstream>()));
+            if(it_ok.second == false) { vlogw("creator fstream false"); return; }
+        }
+        else { vloge("swap error: " v(ct.filename)); return; }
     }
 
     //接受状态
     if(ct.status == 1 && it->second->is_open())
     {
         if(write_file(it->second,ct.buf,ct.buf_size) == false)
-            { vlogw("write_file and return: " v(ct.status)); return; };
+            { map_ofs.erase(it); return; }
     }
     else if(ct.status == 2 && it->second->is_open())
     {
         if(write_file(it->second,ct.buf,ct.buf_size) == false)
-            { vlogw("write_file: " v(ct.status)); return; };
+            { map_ofs.erase(it); return; }
         it->second->close();
         map_ofs.erase(it);
 
@@ -255,14 +255,11 @@ void ms_web_client::back_swap_file(const std::string &meg)
     {
         //首次进入清空文件
         vlogw("func_swap_file open: " v(v_path_files + it->first));
-        it->second->open(v_path_files + it->first,ios::out);
-        if(it->second->is_open()) it->second->close();
-
-        it->second->open(v_path_files + it->first,ios::out|ios::binary|ios::app);
+        it->second->open(v_path_files + it->first,ios::out|ios::binary);
         if(it->second->is_open())
         {
             if(write_file(it->second,ct.buf,ct.buf_size) == false)
-                { vlogw("write_file: " v(ct.status)); };
+                { map_ofs.erase(it); return; }
         }
         else vlogw("file not open");
     }
