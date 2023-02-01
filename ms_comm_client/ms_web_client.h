@@ -31,7 +31,7 @@ class ms_web_client : public inter_client
 {
 public:
     explicit ms_web_client();
-    void set_file_path(string path = "D:\\test\\");
+    void set_file_path(string path = "D/tmp/");
 
     int ask_register(string passwd);
     int ask_login(long long account,string passwd);

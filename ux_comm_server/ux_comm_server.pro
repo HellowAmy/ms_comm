@@ -91,7 +91,12 @@ HEADERS += \
     ux_protocol.h \
     ux_web_server.h
 
-#unix:!macx: LIBS += -L$$PWD/lib/web_sock/lib/ -lhv
+unix:!macx: LIBS += -L$$PWD/lib/web_sock/lib/ -lhv
+
+INCLUDEPATH += $$PWD/lib/web_sock/include
+DEPENDPATH += $$PWD/lib/web_sock/include
+
+#win32: LIBS += -L$$PWD/lib/web_sock/lib/ -llibhv.dll
 
 #INCLUDEPATH += $$PWD/lib/web_sock/include
 #DEPENDPATH += $$PWD/lib/web_sock/include
@@ -100,8 +105,3 @@ HEADERS += \
 
 #INCLUDEPATH += $$PWD/lib/web_sock/include
 #DEPENDPATH += $$PWD/lib/web_sock/include
-
-win32: LIBS += -L$$PWD/lib/web_sock/lib/ -llibhv.dll
-
-INCLUDEPATH += $$PWD/lib/web_sock/include
-DEPENDPATH += $$PWD/lib/web_sock/include

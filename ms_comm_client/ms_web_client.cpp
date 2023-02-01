@@ -67,7 +67,7 @@ int ms_web_client::ask_swap_txt
 void ms_web_client::ask_swap_file
     (long long account_from,long long account_to,std::string filename)
 {
-    vlogf("ask_swap_file");
+//    vlogf("ask_swap_file");
     vlogf(v(account_from) v(account_to) v(filename));
     auto func = [=](long long account_from,long long account_to,std::string filename)
     {
@@ -80,7 +80,7 @@ void ms_web_client::ask_swap_file
         fstream ofs(filename,ios::in | ios::binary);
         if(ofs.is_open())
         {
-            vlogf("is_open");
+            vlogd("is_open");
             ofs.seekg(0,ios::end);
             ct.lenght = ofs.tellg();
             ofs.seekg(0,ios::beg);
@@ -131,7 +131,7 @@ void ms_web_client::ask_swap_file
 
     std::thread th(func,account_from,account_to,filename);
     th.detach();
-    vlogf("thread detach: out");
+    vlogd("thread detach: out");
 }
 
 bool ms_web_client::is_connect()

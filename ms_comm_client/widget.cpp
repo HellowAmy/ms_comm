@@ -12,7 +12,7 @@ Widget::Widget(QWidget *parent)
     edit_f = new QLineEdit(this);
     edit_f->resize(300,30);
     edit_f->move(300,100);
-    edit_f->setText("D:\\test\\11\\11.png");
+    edit_f->setText("/home/red/test/qq.txt");
     edit_f->show();
 
     edit_account = new QLineEdit(this);
