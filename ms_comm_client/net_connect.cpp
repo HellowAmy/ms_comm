@@ -11,6 +11,11 @@ int net_connect::open_client
     v_account = account;
     v_passwd = passwd;
 
+//    connect()
+//    std::bind(&net_connect::fa_connect_close,this,_1);
+//    std::bind(&net_connect::send_file,this,_1,_2);
+//    web_c.func_close = bind(&net_connect::fa_connect_close,this,_1);
+
     web_c.func_open = [=](){
         web_c.ask_login(v_account,v_passwd);
     };

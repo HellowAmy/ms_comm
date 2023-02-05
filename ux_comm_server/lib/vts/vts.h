@@ -3,10 +3,10 @@
 
 
 //=====
-#define VOPEN_VLOG
-#define VOPEN_STM
+//#define VOPEN_VLOG
+//#define VOPEN_STM
 #define VOPEN_FOR
-#define VOPEN_PUSH
+//#define VOPEN_PUSH
 //#define VLOG_CLOSE //开启此宏将取消所有注释--头文件之前定义
 //=====
 

@@ -54,29 +54,29 @@ Widget::Widget(QWidget *parent)
     lab_t->setText("QLabel");
     lab_t->show();
 
-    net = new net_connect;
-    connect(net,&net_connect::fa_login_status,this,[=](bool ok){
-        lab->setText("login: "+QString::number(ok));
-    });
-    connect(net,&net_connect::fa_swap_txt,this,[=](long long from,QString txt){
-        lab_t->setText("swap_txt: "+QString::number(from)+"|"+txt);
-    });
-    connect(net,&net_connect::fa_swap_files,this,[=](long long from,QString filename){
-        lab_t->setText("swap_txt: "+QString::number(from)+"|"+filename);
-    });
+//    net = new net_connect;
+//    connect(net,&net_connect::fa_login_status,this,[=](bool ok){
+//        lab->setText("login: "+QString::number(ok));
+//    });
+//    connect(net,&net_connect::fa_swap_txt,this,[=](long long from,QString txt){
+//        lab_t->setText("swap_txt: "+QString::number(from)+"|"+txt);
+//    });
+//    connect(net,&net_connect::fa_swap_files,this,[=](long long from,QString filename){
+//        lab_t->setText("swap_txt: "+QString::number(from)+"|"+filename);
+//    });
 
-    connect(butt,&QPushButton::clicked,this,[=](){
-        net->send_txt(edit->text().toLongLong(),this->windowTitle().toStdString());
-    });
-    connect(butt_f,&QPushButton::clicked,this,[=](){
-        butt_f->setText("butt_f");
-        net->send_file(edit->text().toLongLong(),edit_f->text().toStdString());
-    });
-    connect(butt_in,&QPushButton::clicked,this,[=](){
-        open_c(edit_in->text().toLongLong(),"123qwe");
+//    connect(butt,&QPushButton::clicked,this,[=](){
+//        net->send_txt(edit->text().toLongLong(),this->windowTitle().toStdString());
+//    });
+//    connect(butt_f,&QPushButton::clicked,this,[=](){
 //        butt_f->setText("butt_f");
 //        net->send_file(edit->text().toLongLong(),edit_f->text().toStdString());
-    });
+//    });
+//    connect(butt_in,&QPushButton::clicked,this,[=](){
+//        open_c(edit_in->text().toLongLong(),"123qwe");
+////        butt_f->setText("butt_f");
+////        net->send_file(edit->text().toLongLong(),edit_f->text().toStdString());
+//    });
 
 }
 
@@ -85,10 +85,10 @@ Widget::~Widget()
 
 }
 
-void Widget::open_c(long long ac, std::string pa)
-{
-    edit_account->setText(QString::number(ac));
-    this->setWindowTitle(QString::number(ac));
-    net->open_client(ac,pa);
-}
+//void Widget::open_c(long long ac, std::string pa)
+//{
+//    edit_account->setText(QString::number(ac));
+//    this->setWindowTitle(QString::number(ac));
+//    net->open_client(ac,pa);
+//}
 

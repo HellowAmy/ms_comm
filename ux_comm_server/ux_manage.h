@@ -42,9 +42,9 @@ public:
     static bool add_account(map<long long,string> &map_account,
                             const string &passwd,long long &ret_account);
 
-    //账号和fd插入到容器连接队列
+    //账号和fd插入到容器连接队列从
     template<class T>
-    static bool add_connect(map<long long,T> &map_connect,long long account,T sock)
+    static bool add_connect(map<long long,T> &map_connect,const long long &account,const T &sock)
     {
         if(map_connect.find(account) == map_connect.end())
         {
@@ -54,18 +54,18 @@ public:
         else return false;
     }
 
-    //结构体转string
-    template <class T_head,class T_ct>
-    static string to_str(T_head h,T_ct ct)
-    { return string((char*)&h,sizeof(T_head)) + string((char*)&ct,sizeof(T_ct)); }
+//    //结构体转string
+//    template <class T_head,class T_ct>
+//    static string to_str(T_head h,T_ct ct)
+//    { return string((char*)&h,sizeof(T_head)) + string((char*)&ct,sizeof(T_ct)); }
 
-    //string转结构体
-    template <class T_head,class T_ct>
-    static void from_str(const string &str,T_head &h,T_ct &ct)
-    {
-        h = *(T_head*)string(str.begin(),str.begin()+sizeof(T_head)).c_str();
-        ct = *(T_ct*)string(str.begin()+sizeof(T_head),str.end()).c_str();
-    }
+//    //string转结构体
+//    template <class T_head,class T_ct>
+//    static void from_str(const string &str,T_head &h,T_ct &ct)
+//    {
+//        h = *(T_head*)string(str.begin(),str.begin()+sizeof(T_head)).c_str();
+//        ct = *(T_ct*)string(str.begin()+sizeof(T_head),str.end()).c_str();
+//    }
 };
 
 #endif // UX_MANAGE_H

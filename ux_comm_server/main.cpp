@@ -2,9 +2,10 @@
 
 int main()
 {
+
     cout<<"open server"<<endl;
     ux_web_server k;
-    k.open();
+    k.open_server();
     cout<<"close server"<<endl;
 
 #if 0

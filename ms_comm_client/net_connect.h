@@ -3,6 +3,12 @@
 
 #include <QObject>
 
+//#include <iostream>
+#include<functional>
+using std::bind;
+using std::placeholders::_1;
+using std::placeholders::_2;
+
 #include "ms_web_client.h"
 #include "lib/vts/vts.h"
 

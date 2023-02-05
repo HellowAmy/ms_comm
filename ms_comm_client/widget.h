@@ -8,7 +8,7 @@
 
 
 
-#include "net_connect.h"
+//#include "net_connect.h"
 
 class Widget : public QWidget
 {
@@ -18,7 +18,7 @@ public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
 
-    void open_c(long long ac,string pa);
+//    void open_c(long long ac,string pa);
 
     QPushButton *butt;
     QPushButton *butt_f;
@@ -29,6 +29,6 @@ public:
     QLineEdit *edit_f;
     QLineEdit *edit_account;
     QLineEdit *edit_in;
-    net_connect *net;
+//    net_connect *net;
 };
 #endif // WIDGET_H
