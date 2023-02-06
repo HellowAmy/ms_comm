@@ -58,8 +58,30 @@ using func_task = function<void(const string&)>;
 
 //#define WRITE_BUFSIZE_HIGH_WATER (1U << 23)  // 8M
 
+//文件错误返回
+enum en_file_err
+{
+    e_file_open_err,
+    e_file_build_err,
+    e_file_send_err,
+    e_file_ret_err
+};
+
 class ms_web_client : public inter_client
 {
+public:
+    //文件发送状态标记
+    struct send_file_flg
+    {
+        bool is_send;           //正在发送
+        long long size_block;   //块大小
+        long long off_file;     //文件偏移
+        long long size_file;    //文件总长度
+        long long account_to;   //账号--目标接收者
+        long long account_from; //账号--来自发送者
+        fstream ofs;            //打开的文件对象
+    };
+
 public:
     explicit ms_web_client();
     void set_file_path(string path = "D/tmp/");
@@ -68,74 +90,50 @@ public:
     void ask_login(long long account,string passwd);//登录请求
     void ask_logout(long long account);//登出请求
     void ask_recover_passwd(long long account);//找回密码
-    void ask_swap_txt(long long account_from,long long account_to,string txt);//发送文字
-    void ask_swap_file(long long account_from,long long account_to,string filename);//发送文件
 
-//    bool is_connect();
+    //发送文字
+    void ask_swap_txt(long long account_from,
+                      long long account_to,string txt);
+    //发送文件
+    void ask_swap_file(long long account_from,
+                       long long account_to,string filename);
 
-
-
-
-
-
-
-//    void register_back(const string& meg);          //注册任务反馈-c
-//    void login_back(const string& meg);             //登录请求反馈-c
-//    void logout_back(const string& meg);            //登出请求反馈-c
-//    void recover_passwd_back(const string& meg);    //找回密码反馈-c
-//    void disconnect_txt(const string& meg);         //目标账号未连接--发送文字-c
-//    void disconnect_file(const string& meg);        //目标账号未连接--发送文件-c
-//    void disconnect(const string& meg);             //转发未连接
-//    void swap_txt(const string& meg);               //交换文字-c2
-//    void swap_file_build(const string& meg);        //建立文件-c2
-//    void swap_file_build_err(const string& meg);    //建立文件错误-c1
-//    void swap_file_send(const string& meg);         //发送文件段-c2
-//    void swap_file_send_err(const string& meg);     //发送文件错误-c1
-//    void swap_file_ret_err(const string& meg);      //接收文件完整性错误-c1
-
-
-
+    //== 回调函数 ==
     function<void()> func_open = nullptr;
     function<void()> func_close = nullptr;
-//    function<void(const string& meg)> func_swap = nullptr;
 
+    function<void(long long account,string passwd,bool ok)>
+        func_register_back = nullptr;
 
+    function<void(long long account,bool ok)>
+        func_login_back = nullptr;
 
+    function<void(long long account,bool ok)>
+        func_logout_back = nullptr;
 
-    function<void(long long account,string passwd,bool ok)> func_register_back = nullptr;
-    function<void(long long account,bool ok)> func_login_back = nullptr;
-    function<void(long long account,bool ok)> func_logout_back = nullptr;
-    function<void(long long account,string passwd,bool ok)> func_recover_passwd_back = nullptr;
-    function<void(long long account_to,ct_head_mode head_info)> func_disconnect = nullptr;
-    function<void(long long account_from,string txt)> func_swap_txt = nullptr;
+    function<void(long long account,string passwd,bool ok)>
+        func_recover_passwd_back = nullptr;
 
+    function<void(long long account_to,ct_head_mode head_info)>
+        func_disconnect = nullptr;
 
-//    //交换文字
-//    CT_BUILD_SWAP(ct_swap_txt,
-//        long long account_from;
-//        char buf_txt[1024];
-//    );
+    function<void(long long account_from,string txt)>
+        func_swap_txt = nullptr;
 
-//    //转发未连接
-//    CT_BUILD_MODE(ct_disconnect,
-//        long long account_to;
-//        ct_head_mode head_info;
-//    );
+    function<void(long long account_from,string filename)>
+        func_swap_file = nullptr;
 
-//    function<void(long long from,long long to,string txt)> func_swap_txt = nullptr;
-//    function<void(long long from,long long to,string filename)> func_swap_file = nullptr;
+    function<void(long long account_to,string filename,en_file_err err)>
+        func_swap_file_err = nullptr;
+    //== 回调函数 ==
+
 
 protected:
     string v_path_files;
-    map<string,shared_ptr<fstream>> map_ofs;//文件名和读取流
-//    map<enum_transmit,function<void(const string&)>> map_task_func;//任务函数
 
-
-
-
-
+    map<string,send_file_flg> map_send;//文件名和文件状态--发送
+    map<string,send_file_flg> map_recv;//文件名和文件状态--接收
     map<en_mode_index,func_task> map_task_func;//任务函数
-//    map<en_mode_index,func_task> map_task_func;//任务函数
 
     //===== 任务函数 =====
     void register_back(const string& meg);          //注册任务反馈-c
@@ -150,55 +148,22 @@ protected:
     void swap_file_build_err(const string& meg);    //建立文件错误-c1
     void swap_file_send(const string& meg);         //发送文件段-c2
     void swap_file_send_err(const string& meg);     //发送文件错误-c1
+    void swap_file_finish(const string& meg);       //发送完成-c2
+    void swap_file_finish_err(const string& meg);   //发送完成-错误反馈-c1
     void swap_file_ret_err(const string& meg);      //接收文件完整性错误-c1
-    //===== 任务函数 =====
-
-//ct_head_mode cd;
-//ct_swap_txt l1;
-//    e_register,             //注册请求-s
-//    e_register_back,        //注册任务反馈-c
-//    e_login,                //登录请求-s
-//    e_login_back,           //登录请求反馈-c
-//    e_logout,               //登出请求-s
-//    e_logout_back,          //登出请求反馈-c
-//    e_recover_passwd,       //找回密码-s
-//    e_recover_passwd_back,  //找回密码反馈-c
-//    e_disconnect_txt,       //目标账号未连接--发送文字-c
-//    e_disconnect_file,      //目标账号未连接--发送文件-c
-//    e_disconnect,           //转发未连接
-//    e_swap_txt,             //交换文字-c2
-//    e_swap_file_build,      //建立文件-c2
-//    e_swap_file_build_err,  //建立文件错误-c1
-//    e_swap_file_send,       //发送文件段-c2
-//    e_swap_file_send_err,   //发送文件错误-c1
-//    e_swap_file_ret_err,    //接收文件完整性错误-c1
-//    e_swap_file_request,    //发送文件段请求-c2
-
-
-
-
-//    void back_error(const string& meg);//错误反馈
-//    void back_swap_txt(const string& meg);//数据交换
-//    void back_swap_file(const string& meg);//文件交换
+    void swap_file_request(const string& meg);      //发送文件段请求-c2
     //===== 任务函数 =====
 
     void on_open() override;
     void on_message(const string& meg) override;
     void on_close() override;
 
-//    int send_meg(const string& meg);
-    bool write_file(shared_ptr<fstream> sp_ofs,const char *buf,int size);
-
+    long long write_buf(fstream *ofs,const char *buf,int size);
+    long long read_buf(fstream *ofs,char *buf,int size);
 
     //发送到服务端
     std::mutex lock_send;
-    template<class Tsock>
-    bool send_str(const Tsock &sock,const string &str)
-    {
-        std::unique_lock<mutex> lock(lock_send);
-        sock->send(str.c_str(),str.size());
-        return sock->isConnected();
-    }
+    bool send_str(const string &str);
 };
 
 #endif // MS_WEB_CLIENT_H
