@@ -1103,7 +1103,49 @@ main.o: ../main.cpp ../widget.h \
 		../../../../tools/qt-5.14.2-install-pack/5.14.2/gcc_64/include/QtCore/qeventloop.h \
 		../../../../tools/qt-5.14.2-install-pack/5.14.2/gcc_64/include/QtWidgets/qdesktopwidget.h \
 		../../../../tools/qt-5.14.2-install-pack/5.14.2/gcc_64/include/QtGui/qguiapplication.h \
-		../../../../tools/qt-5.14.2-install-pack/5.14.2/gcc_64/include/QtGui/qinputmethod.h
+		../../../../tools/qt-5.14.2-install-pack/5.14.2/gcc_64/include/QtGui/qinputmethod.h \
+		../ms_web_client.h \
+		../lib/web_sock/inter_sock.hpp \
+		../lib/web_sock/include/WebSocketServer.h \
+		../lib/web_sock/include/HttpServer.h \
+		../lib/web_sock/include/hexport.h \
+		../lib/web_sock/include/HttpService.h \
+		../lib/web_sock/include/HttpMessage.h \
+		../lib/web_sock/include/hbase.h \
+		../lib/web_sock/include/hplatform.h \
+		../lib/web_sock/include/hconfig.h \
+		../lib/web_sock/include/hdef.h \
+		../lib/web_sock/include/hstring.h \
+		../lib/web_sock/include/hmap.h \
+		../lib/web_sock/include/hfile.h \
+		../lib/web_sock/include/hbuf.h \
+		../lib/web_sock/include/hpath.h \
+		../lib/web_sock/include/httpdef.h \
+		../lib/web_sock/include/http_content.h \
+		../lib/web_sock/include/json.hpp \
+		../lib/web_sock/include/HttpResponseWriter.h \
+		../lib/web_sock/include/Channel.h \
+		../lib/web_sock/include/hloop.h \
+		../lib/web_sock/include/hssl.h \
+		../lib/web_sock/include/hsocket.h \
+		../lib/web_sock/include/Buffer.h \
+		../lib/web_sock/include/HttpContext.h \
+		../lib/web_sock/include/WebSocketChannel.h \
+		../lib/web_sock/include/wsdef.h \
+		../lib/web_sock/include/hmath.h \
+		../lib/web_sock/include/WebSocketClient.h \
+		../lib/web_sock/include/TcpClient.h \
+		../lib/web_sock/include/hlog.h \
+		../lib/web_sock/include/EventLoopThread.h \
+		../lib/web_sock/include/EventLoop.h \
+		../lib/web_sock/include/hthread.h \
+		../lib/web_sock/include/Status.h \
+		../lib/web_sock/include/Event.h \
+		../lib/web_sock/include/ThreadLocalStorage.h \
+		../lib/web_sock/include/HttpParser.h \
+		../lib/web_sock/include/WebSocketParser.h \
+		../ux_manage.h \
+		../../web_protocol.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../main.cpp
 
 ms_web_client.o: ../ms_web_client.cpp ../ms_web_client.h \

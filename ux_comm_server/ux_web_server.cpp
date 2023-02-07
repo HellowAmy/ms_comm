@@ -85,6 +85,7 @@ void ux_web_server::on_message(const web_sock &sock, const string &meg)
     //执行匹配的任务函数
     ct_head_mode ct;
     to_ct(meg,ct);
+    vlogf("meg: " vv(meg) vv(ct.type) vv(ct.func));
     if(ct.type == en_mode::e_request) //进入应答函数
     {
         auto it_func = map_task_func.find(ct.func);
@@ -199,6 +200,8 @@ void ux_web_server::task_login(const web_sock &sock, const std::string &meg)
 
     //添加到连接队列
     to_ct(meg,ct);
+    vlogf("meg: " vv(meg) vv(ct.account) vv(ct.passwd));
+
     auto it = map_account.find(ct.account);
     if(it != map_account.end())
     {
@@ -207,6 +210,8 @@ void ux_web_server::task_login(const web_sock &sock, const std::string &meg)
         {
             ct_back.account = ct.account;
             ct_back.is_success = true;
+
+            for_it(it,map_connect) { vlogd("login: " vv(it->first)); }
         }
         else { ct_back.is_success = false; };
     }

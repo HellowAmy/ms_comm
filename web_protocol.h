@@ -51,9 +51,11 @@ enum en_mode_index
     e_disconnect,           //转发未连接
     e_swap_txt,             //交换文字-c2
     e_swap_file_build,      //建立文件-c2
-    e_swap_file_build_err,  //建立文件错误-c1
+    e_swap_file_build_err,  //建立文件-错误反馈-c1
     e_swap_file_send,       //发送文件段-c2
-    e_swap_file_send_err,   //发送文件错误-c1
+    e_swap_file_send_err,   //发送文件段-错误反馈-c1
+    e_swap_file_finish,     //发送完成-c2
+    e_swap_file_finish_err, //发送完成-错误反馈-c1
     e_swap_file_ret_err,    //接收文件完整性错误-c1
     e_swap_file_request,    //发送文件段请求-c2
 };
@@ -188,8 +190,8 @@ CT_BUILD_SWAP(ct_swap_txt,
 //建立文件
 CT_BUILD_SWAP(ct_swap_file_build,
     long long account_from;
-    long long block_sum;
-    long long size_sum;
+    long long size_block;   //发送块大小
+    long long size_file;    //文件总大小
     char filename[255];
 );
 
@@ -201,15 +203,28 @@ CT_BUILD_SWAP(ct_swap_file_build_err,
 
 //发送文件段
 CT_BUILD_SWAP(ct_swap_file_send,
+    bool is_next;
     long long account_from;
-    long long block_count;
-    long long size_buf;
+    long long off_file;     //当前文件偏移
+    long long size_buf;     //本次发送的真实字节
     char filename[255];
     char buf[4096];
 );
 
 //发送文件错误
 CT_BUILD_SWAP(ct_swap_file_send_err,
+    long long account_from;
+    char filename[255];
+);
+
+//发送完成
+CT_BUILD_SWAP(ct_swap_file_finish,
+    long long account_from;
+    char filename[255];
+);
+
+//发送完成错误
+CT_BUILD_SWAP(ct_swap_file_finish_err,
     long long account_from;
     char filename[255];
 );
