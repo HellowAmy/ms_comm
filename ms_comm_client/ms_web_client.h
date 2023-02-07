@@ -84,7 +84,7 @@ public:
 
 public:
     explicit ms_web_client();
-    void set_file_path(string path = "D/tmp/");
+    void set_file_path(string path = "/home/red/test/");
 
     void ask_register(string passwd);//注册请求
     void ask_login(long long account,string passwd);//登录请求

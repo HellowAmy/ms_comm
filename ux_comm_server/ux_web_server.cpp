@@ -85,7 +85,6 @@ void ux_web_server::on_message(const web_sock &sock, const string &meg)
     //执行匹配的任务函数
     ct_head_mode ct;
     to_ct(meg,ct);
-    vlogf("meg: " vv(meg) vv(ct.type) vv(ct.func));
     if(ct.type == en_mode::e_request) //进入应答函数
     {
         auto it_func = map_task_func.find(ct.func);
@@ -97,43 +96,31 @@ void ux_web_server::on_message(const web_sock &sock, const string &meg)
     { task_swap(sock,meg); }
     else //未发现协议
     { vloge("on_message not find: " vv(ct.type) vv(ct.func)); }
-
-
-
-
-
-
-
-
-//    enum_transmit cmd = *(enum_transmit*)
-//            string(meg.begin(),meg.begin() + sizeof(enum_transmit)).c_str();
-//    auto it_find = map_func.find(cmd);
-//    if(it_find != map_func.end())
-//    {
-//        (std::bind(it_find->second,sock,meg))();//执行任务
-//    }
-//    else vlogw("map_func not find" v(cmd));
 }
 
 void ux_web_server::on_close(const web_sock &sock)
 {
+    vlogd("on_close");
     move_connect();
+
 }
 
 void ux_web_server::move_connect()
 {
-//    vlevel(vlog::e_info,vlog::e_info);
     unique_lock<mutex> lock(lock_connect);
-    for_it(it,map_connect)
+
+    auto it = map_connect.begin();
+    while(true)
     {
-        if(it->second != nullptr)
+        if(it == map_connect.end()) break;
+        if(it->second->isClosed())
         {
-            if(it->second->isConnected() == false)
-                { map_connect.erase(it); break; }
+            map_connect.erase(it);
+            vlogd("move_connect: " vv(it->first) vv(map_connect.size()));
+            it = map_connect.begin();
         }
-        else map_connect.erase(it);
+        it++;
     }
-    //    vlogd("map_connect size: " v(map_connect.size()));
 }
 
 bool ux_web_server::move_map_connect(const long long &account)
@@ -194,65 +181,31 @@ void ux_web_server::task_login(const web_sock &sock, const std::string &meg)
 {
     vlogf("task_login");
     ct_login ct;
-//    ct_login_back ct_back;
     MAKE_CT_RES(ct_back,login_back);
 
+    to_ct(meg,ct);
+    ct_back.account = ct.account;
+    ct_back.is_success = false;
 
     //添加到连接队列
-    to_ct(meg,ct);
-    vlogf("meg: " vv(meg) vv(ct.account) vv(ct.passwd));
-
     auto it = map_account.find(ct.account);
     if(it != map_account.end())
     {
-        if(it->second == string(ct.passwd,sizeof(ct.passwd))
-                && add_to_connect(ct.account,sock))
-        {
-            ct_back.account = ct.account;
-            ct_back.is_success = true;
-
-            for_it(it,map_connect) { vlogd("login: " vv(it->first)); }
-        }
-        else { ct_back.is_success = false; };
+        if(s_equals(it->second,ct.passwd) && add_to_connect(ct.account,sock))
+        { ct_back.is_success = true; }
     }
+    else vlogw("not find: " vv(ct.account));
 
     //反馈到客户端
+    vlogf("back: " vv(ct_back.account) vv(ct_back.is_success)  vv(map_connect.size()));
     if(send_str(sock,to_str(ct_back)) == false)
     { vloge("send_str err"); }
-
-
-
-
-
-
-
-
-//    ct_login ct;
-//    enum_transmit cmd;
-//    ux_manage::from_str<enum_transmit,ct_login>(meg,cmd,ct);
-//    vlogf("task_login: " v(ct.account) v(ct.passwd));
-
-//    //添加到连接队列
-//    ct_login_back ct_back;
-//    unique_lock<mutex> lock(lock_connect);
-
-//    if(map_account.find(ct.account) != map_account.end()
-//            && ux_manage::add_connect<web_sock>(map_connect,ct.account,sock))
-//    { ct_back.flg = 1; }
-//    else ct_back.flg = 0;
-
-//    //反馈到客户端
-//    string str = ux_manage::to_str<enum_transmit,ct_login_back>
-//            (enum_transmit::e_login_back,ct_back);
-//    if(send_back(sock,str) == -1) vlogw("send to client error");
-    //    vlogd("map_connect size: " v(map_connect.size()));
 }
 
 void ux_web_server::task_logout(const web_sock &sock, const std::string &meg)
 {
     vlogf("task_logout");
     ct_logout ct;
-//    ct_logout_back ct_back;
     MAKE_CT_RES(ct_back,logout_back);
 
     //账号移除连接容器
@@ -267,33 +220,6 @@ void ux_web_server::task_logout(const web_sock &sock, const std::string &meg)
     //反馈到客户端
     if(send_str(sock,to_str(ct_back)) == false)
     { vloge("send_str err"); }
-
-
-
-
-
-
-
-
-
-//    //添加到连接队列
-//    to_ct(meg,ct);
-//    auto it = map_account.find(ct.account);
-//    if(it != map_account.end())
-//    {
-//        if(it->second == string(ct.passwd) && add_to_connect(ct.account,sock))
-//        {
-//            ct_back.account = ct.account;
-//            ct_back.is_success = true;
-//        }
-//        else { ct_back.is_success = false; };
-//    }
-
-//    //反馈到客户端
-//    if(send_str(sock,to_str(ct_back)) == false)
-//    { vloge("send_str err"); }
-
-
 }
 
 void ux_web_server::task_recover_passwd(const web_sock &sock, const std::string &meg)
@@ -373,6 +299,9 @@ bool ux_web_server::add_to_connect(const long long &account, const web_sock &soc
     std::unique_lock<mutex> lock(lock_connect);
     return ux_manage::add_connect<web_sock>(map_connect,account,sock);
 }
+
+//void ux_web_server::remove_connect(map<long long,web_sock>::iterator it)
+//{  std::unique_lock<mutex> lock(lock_connect); map_connect.erase(it); }
 
 bool ux_web_server::add_to_account(const std::string &passwd, long long &ret_account)
 {

@@ -69,31 +69,25 @@ protected:
 
     string file_account;
     map<long long,string> map_account;//已存在的账号密码
-    map<long long,web_sock> map_connect;//已连接账号
 
+    //加入连接队列
+    std::mutex lock_connect;
+    map<long long,web_sock> map_connect;
+    bool add_to_connect(const long long &account,const web_sock& sock);
     void move_connect();
+
+
     bool move_map_connect(const long long &account);
 
-
-
-    map<en_mode_index,func_task> map_task_func;//任务函数
-
     //===== 任务函数 =====
+    map<en_mode_index,func_task> map_task_func;//任务函数
     void task_register(const web_sock& sock, const string& meg);//账号注册
     void task_login(const web_sock& sock, const string& meg);//登录请求
     void task_logout(const web_sock& sock, const string& meg);//登出请求
     void task_recover_passwd(const web_sock& sock, const string& meg);//忘记密码
-
-//    void task_error(const web_sock& sock, const string& meg);//错误反馈
     void task_swap(const web_sock& sock, const string& meg);//数据交换
-//    void task_swap_file(const web_sock& sock, const string& meg);//文件交换
     //===== 任务函数 =====
 
-
-
-    //加入连接队列
-    std::mutex lock_connect;
-    bool add_to_connect(const long long &account,const web_sock& sock);
 
     //加入账号数据库
     std::mutex lock_account;
@@ -105,6 +99,14 @@ protected:
 
 
 
+
+
+    template<class T1,class T2>
+    bool s_equals(T1 s1,T2 s2)
+    { return std::string(s1) == std::string(s2); }
+
+//    template<class T1,T2>
+//    bool
 
 
 //    //登录请求

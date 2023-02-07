@@ -13,63 +13,73 @@ map<string,fstream> map_o;
 
 int main(int argc, char *argv[])
 {
-    if(argc < 3) { cout<<"argc < 2"<<endl; return -1;}
+    if(argc < 2) { cout<<"argc < 2"<<endl; return -1;}
 
+    bool is_open = true;
     stringstream ss;
     long long account;
-    string passwd;
 
     ss<<argv[1];
     ss>>account;
     ss.clear();
 
-    ss<<argv[2];
-    ss>>passwd;
-    ss.clear();
+    if(account == 1)
+    {
+        ms_web_client ms;
+        ms.func_open = [&](){
+            cout<<"ask_login:"<<1045809651<<endl;
+            ms.ask_login(1045809651,"123qwe");
+        };
+        ms.func_close = [&](){
+            is_open = false;
+            cout<<"func_close"<<endl;
+        };
+        ms.func_login_back = [](long long account,bool ok){
+            cout<<"func_login_back:"<<account<<"|"<<ok<<endl;
+        };
+        ms.func_swap_txt = [](long long account,string txt){
+            cout<<"func_swap_txt:"<<account<<"|"<<txt<<endl;
+        };
+        ms.func_swap_file = [](long long account,string filename){
+            cout<<"func_swap_file:"<<account<<"|"<<filename<<endl;
+        };
 
-    ms_web_client ms;
-    ms.func_open = [&](){
-        cout<<"ask_login:"<<account<<"|"<<passwd<<endl;
-        ms.ask_login(account,passwd);
-    };
-    ms.func_login_back = [](long long account,bool ok){
-        cout<<"func_login_back:"<<account<<"|"<<ok<<endl;
-    };
+        ms.open();
+        while(is_open){}
 
-    ms.open();
-    while(1){}
+        return 0;
+    }
+    else if(account == 2)
+    {
+        ms_web_client ms;
+        ms.func_open = [&](){
+            cout<<"ask_login:"<<1934865572<<endl;
+            ms.ask_login(1934865572,"123qwe");
+        };
+        ms.func_close = [&](){
+            is_open = false;
+            cout<<"func_close"<<endl;
+        };
+        ms.func_login_back = [](long long account,bool ok){
+            cout<<"func_login_back:"<<account<<"|"<<ok<<endl;
+        };
+        ms.func_swap_txt = [](long long account,string txt){
+            cout<<"func_swap_txt:"<<account<<"|"<<txt<<endl;
+        };
+        ms.func_swap_file = [](long long account,string filename){
+            cout<<"func_swap_file:"<<account<<"|"<<filename<<endl;
+        };
+
+        ms.open();
+        while(is_open){
+            int po;
+            cout<<"input number"<<endl;
+            cin>>po;
+            ms.ask_swap_file(1934865572,1045809651,"123.txt");
+        }
+
+        return 0;
+    }
 
     return 0;
-
-//    it->second.
-//    it->second.
-
-//    cout<<"asda"<<endl;
-//    tools::stm("\\")()
-//    string filename = "D:\\test\\11\\11.PNG";
-//    string temp = tools::stm(filename)("\\",-1,-1);
-//    std::cout<<temp<<endl;
-//    return 0;
-
-    //    3359116136123qwe
-    //    4093996320123qwe
-    //    5511780295123qwe
-//    QApplication a(argc, argv);
-
-//#if 0
-//    Widget w;
-//    w.open_c(3359116136,"123qwe");
-//    w.show();
-//#else
-//    Widget w1;
-////    w1.open_c(4093996320,"123qwe");
-//    w1.show();
-//#endif
-////    Widget w2;
-////    w2.open_c(5511780295,"123qwe");
-////    w2.show();
-
-//    return a.exec();
-
-//            return 0;
 }

@@ -1,8 +1,11 @@
 ﻿#include "ux_web_server.h"
 
+//template<class T1,class T2>
+//bool s_equals(T1 s1,T2 s2)
+//{ return std::string(s1) == std::string(s2); }
+
 int main()
 {
-
     cout<<"open server"<<endl;
     ux_web_server k;
     k.open_server();
