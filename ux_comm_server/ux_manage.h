@@ -43,12 +43,12 @@ public:
                             const string &passwd,long long &ret_account);
 
     //账号和fd插入到容器连接队列从
-    template<class T>
-    static bool add_connect(map<long long,T> &map_connect,const long long &account,const T &sock)
+    template<class T1,class T2>
+    static bool add_connect(map<T1,T2> &map_connect,const T1 &account,const T2 &sock)
     {
         if(map_connect.find(account) == map_connect.end())
         {
-            map_connect.insert(pair<long long,T>(account,sock));
+            map_connect.insert(pair<T1,T2>(account,sock));
             return true;
         }
         else return false;

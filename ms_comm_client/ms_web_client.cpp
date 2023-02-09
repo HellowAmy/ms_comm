@@ -93,26 +93,25 @@ void ms_web_client::ask_swap_txt(long long account_from, long long account_to, s
 void ms_web_client::ask_swap_file
     (long long account_from, long long account_to, std::string filename)
 {
-    vlogd("ask_swap_file");
+    vlogd("send:ask_swap_file");
     MAKE_CT_SWAP(ct,swap_file_build,account_to);
 
-    fstream ofs(filename,ios::in);
+    fstream ofs(filename,ios::in|ios::binary);
     if(ofs.is_open())
     {
         //记录发送信息
         ofs.seekg(0,ios::end);
         ct.size_file = ofs.tellg();
-        ct.size_block = 4096*1024;
+        ct.size_block = WRITE_BUFSIZE_HIGH_WATER;//发送量达到高负载时停止
         ct.account_from = account_from;
         strncpy(ct.filename,filename.c_str(),sizeof(ct.filename));
         ofs.seekg(0,ios::beg);
 
         //记录文件流状态
-        send_file_flg ct_send;
+        io_send ct_send;
         ct_send.is_send = true;
         ct_send.size_block = ct.size_block;
         ct_send.size_file = ct.size_file;
-        ct_send.off_file = ofs.tellg();
         ct_send.account_from = account_from;
         ct_send.account_to = account_to;
         ct_send.ofs = move(ofs);
@@ -121,14 +120,12 @@ void ms_web_client::ask_swap_file
         if(send_str(to_str(ct)))
         { vlogw("send err: ask_swap_txt"); }
 
-        map_send.insert(pair<string,send_file_flg>(filename,std::move(ct_send)));
+        map_send.insert(pair<string,io_send>(filename,std::move(ct_send)));
         vlogf("insert: " vv(filename) vv(map_send.size()));
     }
     else
     {
         vlogw("is_open err");
-        if(func_swap_file_err) func_swap_file_err
-                (account_to,filename,en_file_err::e_file_open_err);
     }
 }
 
@@ -157,9 +154,6 @@ BUILD_CT_BACK_FUNC(logout_back,
 BUILD_CT_BACK_FUNC(recover_passwd_back,
     ct.account,string(ct.passwd,sizeof(ct.passwd)),ct.is_success);
 
-BUILD_CT_BACK_FUNC(disconnect,
-    ct.account_to,ct.head_info);
-
 BUILD_CT_BACK_FUNC(swap_txt,
     ct.account_from,string(ct.buf_txt,sizeof(ct.buf_txt)));
 //===== 快速定义反馈函数 =====
@@ -176,19 +170,26 @@ void ms_web_client::disconnect_file(const std::string &meg)
 
 }
 
+void ms_web_client::disconnect(const std::string &meg)
+{
+
+}
+
 void ms_web_client::swap_file_build(const std::string &meg)
 {
-    vlogf("swap_file_build");
+    vlogf("revc:swap_file_build");
     ct_swap_file_build ct;
+    io_recv ct_flg;
     to_ct(meg,ct);
 
-    string filename(ct.filename,sizeof(ct.filename));
-    string filename_open = filename+"-"+std::to_string(ct.account_from);
+    string filename(ct.filename);
+//    ct_flg.save_path = v_path_files+filename+"-"+to_string(ct.account_from) ;
+//    string filename_open = filename+"-"+std::to_string(ct.account_from);
     fstream ofs(v_path_files+filename,ios::out|ios::binary);
     if(ofs.is_open())
     {
         vlogd("is open: " vv(v_path_files+filename));
-        send_file_flg ct_flg;
+
         ct_flg.is_send = true;
         ct_flg.size_block = ct.size_block;
         ct_flg.size_file = ct.size_file;
@@ -200,11 +201,12 @@ void ms_web_client::swap_file_build(const std::string &meg)
         ct_back.account_from = ct_flg.account_from;
         strncpy(ct_back.filename,ct.filename,sizeof(ct_back.filename));
 
-        if(send_str(to_str(ct_back)))
-        { vlogw("send err: swap_file_request"); }
+        vlogd("insert: " vv(filename) vv(ct_flg.save_path));
+        map_recv.insert(pair<string,io_recv>(filename,std::move(ct_flg)));
 
-        vlogd("insert: " vv(filename));
-        map_recv.insert(pair<string,send_file_flg>(filename,std::move(ct_flg)));
+        send_str(to_str(ct_back));
+//        if(send_str(to_str(ct_back)))
+//        { vlogw("send err: swap_file_request"); }
     }
     else { vlogw("swap_file_build open err"); }
 }
@@ -220,22 +222,24 @@ void ms_web_client::swap_file_send(const std::string &meg)
     to_ct(meg,ct);
 
     //接收文件块
-    auto it = map_recv.find(string(ct.filename,sizeof(ct.filename)));
+    auto it = map_recv.find(string(ct.filename));
     if(it != map_recv.end())
     {
-        send_file_flg *precv = &it->second;
-        if(write_buf(&precv->ofs,ct.buf,ct.size_buf) != ct.size_buf)
-        { vlogw("write_buf err: size_buf not equals"); }
+        io_recv *precv = &it->second;
+        if(write_buf(&precv->ofs,ct.buf,ct.size_buf) != ct.size_buf){}
+//        { vlogw("write_buf err: size_buf not equals"); }
 
         //接收块完成，请求下一块
         if(ct.is_next == true)
         {
+            vlogf("is_next off: " vv(precv->ofs.tellg()));
             MAKE_CT_SWAP(ct_back,swap_file_request,precv->account_to);
             ct_back.account_from = precv->account_from;
             strncpy(ct_back.filename,ct.filename,sizeof(ct_back.filename));
 
-            if(send_str(to_str(ct_back)))
-            { vlogw("send err: swap_file_request"); }
+            send_str(to_str(ct_back));
+//            if(send_str(to_str(ct_back)))
+//            { vlogw("send err: swap_file_request"); }
         }
     }
     else { vlogw("not find: swap_file_send"); }
@@ -248,20 +252,21 @@ void ms_web_client::swap_file_send_err(const std::string &meg)
 
 void ms_web_client::swap_file_finish(const std::string &meg)
 {
-    vlogf("swap_file_finish");
+    vlogf("recv:swap_file_finish");
     ct_swap_file_finish ct;
     to_ct(meg,ct);
 
-    auto it = map_recv.find(string(ct.filename,sizeof(ct.filename)));
+    auto it = map_recv.find(string(ct.filename));
     if(it != map_recv.end())
     {
-        send_file_flg *precv = &it->second;
+        io_recv *precv = &it->second;
         if(precv->size_file == precv->ofs.tellg())
-        { vlogd("swap_file_finish: swap file finish"); }
-        else { vlogd("swap_file_finish: ret is failed"); }
+        { vlogd("recv:ok " vv(precv->size_file) vv(precv->ofs.tellg())); }
+        else { vlogd("recv:failed " vv(precv->size_file) vv(precv->ofs.tellg())); }
 
         precv->ofs.close();
         map_recv.erase(it);
+        vlogd("close precv and erase");
     }
     else { vlogw("not find: swap_file_finish"); }
 }
@@ -278,58 +283,71 @@ void ms_web_client::swap_file_ret_err(const std::string &meg)
 
 void ms_web_client::swap_file_request(const std::string &meg)
 {
-    vlogd("swap_file_request");
+//    vlogd("send:swap_file_request");
     ct_swap_file_request ct;
     to_ct(meg,ct);
 
     //查询已经打开的文件
-    vlogf("find: "<<string(ct.filename) << vv(map_send.size()));
-    auto it = map_send.find(ct.filename);
+//    vlogf("find: "<<string(ct.filename) << vv(map_send.size()));
+    auto it = map_send.find(string(ct.filename));
     if(it != map_send.end())
     {
-        send_file_flg *pflg = &it->second;
-        if(pflg->is_send)
+        io_send *psend = &it->second;
+        if(psend->is_send)
         {
             //发送一块数据
-            MAKE_CT_SWAP(ct_back,swap_file_send,pflg->account_to);
-            size_t count = (pflg->size_block/sizeof(ct_back.buf));
+            MAKE_CT_SWAP(ct_back,swap_file_send,psend->account_to);
+            size_t count = (psend->size_block/sizeof(ct_back.buf));
             for(size_t i=0;i<count;i++)
             {
                 ct_back.size_buf = read_buf
-                        (&pflg->ofs,ct_back.buf,sizeof(ct_back.buf));
+                        (&psend->ofs,ct_back.buf,sizeof(ct_back.buf));
                 if(ct_back.size_buf < 0) vloge("write_buf err");
 
                 strncpy(ct_back.filename,ct.filename,sizeof(ct_back.filename));
-                ct_back.account_from = pflg->account_from;
-                ct_back.off_file = pflg->ofs.tellg();
-                ct_back.is_next = false;
+                ct_back.account_from = psend->account_from;
+                ct_back.off_file = psend->ofs.tellg();
 
-                if(send_str(to_str(ct_back)))
-                { vlogw("send err: swap_file_request"); break; }
+                //发送块完成标记
+                if(i >= (count -1) && (psend->ofs.eof() ==false))
+                    ct_back.is_next = true;
+                else ct_back.is_next = false;
 
-                if(i >= (count -1)) ct_back.is_next = true;
+                if(ct_back.is_next)
+                    vlogf("off:" vv(psend->ofs.tellg()) vv(ct_back.size_buf));
+
+//                vlogf(vv(i) vv(count) vv(ct_back.is_next));
+
+                send_str(to_str(ct_back));
+//                if(send_str(to_str(ct_back)))
+//                { vlogw("send err: swap_file_request"); break; }
             }
 
             //文件触底，发送完成标记
-            if(pflg->ofs.eof())
+            if(psend->ofs.eof())
             {
-                vlogd("send file finish: in eof");
-                MAKE_CT_SWAP(ct_end,swap_file_finish,pflg->account_to);
-                ct_end.account_from = pflg->account_from;
+                vlogd("send file finish: in eof:" vv(ct_back.size_buf));
+                MAKE_CT_SWAP(ct_end,swap_file_finish,psend->account_to);
+                ct_end.account_from = psend->account_from;
                 strncpy(ct_end.filename,ct.filename,sizeof(ct_end.filename));
 
-                if(send_str(to_str(ct_end)))
-                { vlogw("send err: swap_file_request"); }
+                send_str(to_str(ct_end));
+//                if(send_str(to_str(ct_end)))
+//                { vlogw("send err: swap_file_request"); }
+
+                //结束文件发送
+                psend->ofs.close();
+                map_send.erase(it);
             }
         }
         else
         {
             vloge("swap_file_request err");
-            if(func_swap_file_err)
-            {
-                func_swap_file_err(ct.account_from,
-                    it->first,en_file_err::e_file_send_err);
-            }
+//            if(func_swap_file_err)
+//            {
+//                func_swap_file_err(ct.account_from,
+//                    it->first,en_file_err::e_file_send_err);
+//            }
         }
     }
     else vlogw("not find: swap_file_request");
@@ -367,6 +385,7 @@ long long ms_web_client::write_buf(std::fstream *ofs, const char *buf, int size)
 
 long long ms_web_client::read_buf(std::fstream *ofs,char *buf, int size)
 {
+    memset(buf,0,size);
     ofs->read(buf,size);
     return ofs->gcount();
 }

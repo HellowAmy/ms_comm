@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
             int po;
             cout<<"input number"<<endl;
             cin>>po;
-            ms.ask_swap_file(1934865572,1045809651,"123.txt");
+            ms.ask_swap_file(1934865572,1045809651,"1234.run");//1234.run 1234.run
         }
 
         return 0;

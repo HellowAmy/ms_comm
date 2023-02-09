@@ -56,7 +56,7 @@ using std::bind;
 
 using func_task = function<void(const string&)>;
 
-//#define WRITE_BUFSIZE_HIGH_WATER (1U << 23)  // 8M
+#define WRITE_BUFSIZE_HIGH_WATER (1U << 23)  // 8M
 
 //文件错误返回
 enum en_file_err
@@ -70,15 +70,26 @@ enum en_file_err
 class ms_web_client : public inter_client
 {
 public:
-    //文件发送状态标记
-    struct send_file_flg
+    //文件状态--发送
+    struct io_send
     {
         bool is_send;           //正在发送
         long long size_block;   //块大小
-        long long off_file;     //文件偏移
         long long size_file;    //文件总长度
-        long long account_to;   //账号--目标接收者
-        long long account_from; //账号--来自发送者
+        long long account_to;   //账号--目标-接收者
+        long long account_from; //账号--来自-发送者
+        fstream ofs;            //打开的文件对象
+    };
+
+    //文件状态--接收
+    struct io_recv
+    {
+        bool is_send;           //正在接收
+        long long size_block;   //块大小
+        long long size_file;    //文件总长度
+        long long account_to;   //账号--目标-接收者
+        long long account_from; //账号--来自-发送者
+        string save_path;       //保存路径
         fstream ofs;            //打开的文件对象
     };
 
@@ -102,48 +113,51 @@ public:
     function<void()> func_open = nullptr;
     function<void()> func_close = nullptr;
 
+    //请求服务器反馈
     function<void(long long account,string passwd,bool ok)>
         func_register_back = nullptr;
-
     function<void(long long account,bool ok)>
         func_login_back = nullptr;
-
     function<void(long long account,bool ok)>
         func_logout_back = nullptr;
-
     function<void(long long account,string passwd,bool ok)>
         func_recover_passwd_back = nullptr;
+    //请求服务器反馈
 
-    function<void(long long account_to,ct_head_mode head_info)>
-        func_disconnect = nullptr;
-
+    //交换反馈
     function<void(long long account_from,string txt)>
         func_swap_txt = nullptr;
-
     function<void(long long account_from,string filename)>
         func_swap_file = nullptr;
+    //交换反馈
 
-    function<void(long long account_to,string filename,en_file_err err)>
-        func_swap_file_err = nullptr;
+    function<void(en_file_err err)> func_err = nullptr;//错误反馈
     //== 回调函数 ==
 
 
 protected:
     string v_path_files;
 
-    map<string,send_file_flg> map_send;//文件名和文件状态--发送
-    map<string,send_file_flg> map_recv;//文件名和文件状态--接收
+    map<string,io_send> map_send;//文件名和文件状态--发送
+    map<string,io_recv> map_recv;//文件名和文件状态--接收
     map<en_mode_index,func_task> map_task_func;//任务函数
 
     //===== 任务函数 =====
+    //请求服务器反馈
     void register_back(const string& meg);          //注册任务反馈-c
     void login_back(const string& meg);             //登录请求反馈-c
     void logout_back(const string& meg);            //登出请求反馈-c
     void recover_passwd_back(const string& meg);    //找回密码反馈-c
+    //请求服务器反馈
+
+
     void disconnect_txt(const string& meg);         //目标账号未连接--发送文字-c
     void disconnect_file(const string& meg);        //目标账号未连接--发送文件-c
     void disconnect(const string& meg);             //转发未连接
+
     void swap_txt(const string& meg);               //交换文字-c2
+
+
     void swap_file_build(const string& meg);        //建立文件-c2
     void swap_file_build_err(const string& meg);    //建立文件错误-c1
     void swap_file_send(const string& meg);         //发送文件段-c2

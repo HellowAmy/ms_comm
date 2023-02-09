@@ -8,11 +8,6 @@
 //解体结构体信息
 #include <string>
 
-//string转索引结构体
-template <class T_head>
-static void to_head(const std::string &str,T_head &h)
-{ h = *(T_head*)str.c_str(); }
-
 //结构体转string
 template <class T_ct>
 static std::string to_str(T_ct ct)
@@ -95,19 +90,19 @@ struct ct_name                      \
 
 
 
-//快速声明结构体--请求
+//快速声明结构体--请求(参数1：变量名，参数2：半截枚举)
 #define MAKE_CT_REQ(in_name,in_type)                \
     ct_##in_type in_name;                           \
     in_name.head.type = en_mode::e_request;         \
     in_name.head.func = en_mode_index::e_##in_type  \
 
-//快速声明结构体--应答
+//快速声明结构体--应答(参数1：变量名，参数2：半截枚举)
 #define MAKE_CT_RES(in_name,in_type)                \
     ct_##in_type in_name;                           \
     in_name.head.type = en_mode::e_response;        \
     in_name.head.func = en_mode_index::e_##in_type  \
 
-//快速声明结构体--交换
+//快速声明结构体--交换(参数1：变量名，参数2：半截枚举，参数3：目标账号)
 #define MAKE_CT_SWAP(in_name,in_type,in_account)    \
     ct_##in_type in_name;                           \
     in_name.head.type = en_mode::e_swap;            \
