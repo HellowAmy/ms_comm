@@ -40,8 +40,8 @@ int main(int argc, char *argv[])
         ms.func_swap_txt = [](long long account,string txt){
             cout<<"func_swap_txt:"<<account<<"|"<<txt<<endl;
         };
-        ms.func_swap_file = [](long long account,string filename){
-            cout<<"func_swap_file:"<<account<<"|"<<filename<<endl;
+        ms.func_swap_file_finish = [](long long account,string filename,en_build_file type,bool is_ok){
+            cout<<"func_swap_file_finish:"<<account<<"|"<<filename<<"|"<<type<<"|"<<is_ok<<endl;
         };
 
         ms.open();
@@ -66,8 +66,8 @@ int main(int argc, char *argv[])
         ms.func_swap_txt = [](long long account,string txt){
             cout<<"func_swap_txt:"<<account<<"|"<<txt<<endl;
         };
-        ms.func_swap_file = [](long long account,string filename){
-            cout<<"func_swap_file:"<<account<<"|"<<filename<<endl;
+        ms.func_swap_file_finish_back = [](long long account,string filename,bool is_ok){
+            cout<<"func_swap_file_finish_back:"<<account<<"|"<<filename<<"|"<<is_ok<<endl;
         };
 
         ms.open();
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
             int po;
             cout<<"input number"<<endl;
             cin>>po;
-            ms.ask_swap_file(1934865572,1045809651,"1234.run");//1234.run 1234.run
+            ms.ask_swap_file(1934865572,1045809651,"4456.jpeg","/home/red/test/123.jpeg",en_build_file::e_spic);
         }
 
         return 0;

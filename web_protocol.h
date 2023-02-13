@@ -33,26 +33,34 @@ enum en_mode
 //连接传输模式--索引对应函数
 enum en_mode_index
 {
-    e_register,             //注册请求-s
-    e_register_back,        //注册任务反馈-c
-    e_login,                //登录请求-s
-    e_login_back,           //登录请求反馈-c
-    e_logout,               //登出请求-s
-    e_logout_back,          //登出请求反馈-c
-    e_recover_passwd,       //找回密码-s
-    e_recover_passwd_back,  //找回密码反馈-c
-    e_disconnect_txt,       //目标账号未连接--发送文字-c
-    e_disconnect_file,      //目标账号未连接--发送文件-c
-    e_disconnect,           //转发未连接
-    e_swap_txt,             //交换文字-c2
-    e_swap_file_build,      //建立文件-c2
-    e_swap_file_build_err,  //建立文件-错误反馈-c1
-    e_swap_file_send,       //发送文件段-c2
-    e_swap_file_send_err,   //发送文件段-错误反馈-c1
-    e_swap_file_finish,     //发送完成-c2
-    e_swap_file_finish_err, //发送完成-错误反馈-c1
-    e_swap_file_ret_err,    //接收文件完整性错误-c1
-    e_swap_file_request,    //发送文件段请求-c2
+    e_register,                 //注册请求-s
+    e_register_back,            //注册任务反馈-c
+    e_login,                    //登录请求-s
+    e_login_back,               //登录请求反馈-c
+    e_logout,                   //登出请求-s
+    e_logout_back,              //登出请求反馈-c
+    e_recover_passwd,           //找回密码-s
+    e_recover_passwd_back,      //找回密码反馈-c
+    e_disconnect_txt,           //目标账号未连接--发送文字-c
+    e_disconnect_file,          //目标账号未连接--发送文件-c
+    e_disconnect,               //转发未连接
+    e_swap_txt,                 //交换文字-c2
+    e_swap_file_build,          //建立文件-c2
+    e_swap_file_request,        //发送文件段请求-c2
+    e_swap_file_send,           //发送文件段-c2
+    e_swap_file_finish,         //发送完成-c2
+    e_swap_file_finish_back,    //发送完成-c2
+    e_swap_file_build_err,      //建立文件-错误反馈-c1
+    e_swap_file_send_err,       //发送文件段-错误反馈-c1
+    e_swap_file_finish_err,     //发送完成-错误反馈-c1
+    e_swap_file_ret_err,        //接收文件完整性错误-c1
+};
+
+//文件转发类型
+enum en_build_file
+{
+    e_spic,     //图片表情包
+    e_file      //普通文件
 };
 
 
@@ -184,6 +192,7 @@ CT_BUILD_SWAP(ct_swap_txt,
 
 //建立文件
 CT_BUILD_SWAP(ct_swap_file_build,
+    en_build_file type;
     long long account_from;
     long long size_block;   //发送块大小
     long long size_file;    //文件总大小
@@ -216,6 +225,13 @@ CT_BUILD_SWAP(ct_swap_file_send_err,
 CT_BUILD_SWAP(ct_swap_file_finish,
     long long account_from;
     char filename[255];
+);
+
+//发送完成反馈
+CT_BUILD_SWAP(ct_swap_file_finish_back,
+    long long account_from;
+    char filename[255];
+    bool is_ok;
 );
 
 //发送完成错误

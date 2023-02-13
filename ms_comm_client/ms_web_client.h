@@ -74,6 +74,7 @@ public:
     struct io_send
     {
         bool is_send;           //正在发送
+        en_build_file type;     //传输类型
         long long size_block;   //块大小
         long long size_file;    //文件总长度
         long long account_to;   //账号--目标-接收者
@@ -85,6 +86,7 @@ public:
     struct io_recv
     {
         bool is_send;           //正在接收
+        en_build_file type;     //传输类型
         long long size_block;   //块大小
         long long size_file;    //文件总长度
         long long account_to;   //账号--目标-接收者
@@ -105,10 +107,13 @@ public:
     //发送文字
     void ask_swap_txt(long long account_from,
                       long long account_to,string txt);
-    //发送文件
-    void ask_swap_file(long long account_from,
-                       long long account_to,string filename);
 
+    //发送文件(参数1:来自账号,参数2:目标账号,参数3:标记文件名,参数4:发送的文件路径,参数5:发送类型)
+    void ask_swap_file(long long account_from,
+                       long long account_to,
+                       string filename,
+                       string file_path,
+                       en_build_file type);
     //== 回调函数 ==
     function<void()> func_open = nullptr;
     function<void()> func_close = nullptr;
@@ -127,8 +132,10 @@ public:
     //交换反馈
     function<void(long long account_from,string txt)>
         func_swap_txt = nullptr;
-    function<void(long long account_from,string filename)>
-        func_swap_file = nullptr;
+    function<void(long long account_from,string filename,bool is_ok)>
+        func_swap_file_finish_back = nullptr;
+    function<void(long long account_from,string filename,en_build_file type,bool is_ok)>
+        func_swap_file_finish = nullptr;
     //交换反馈
 
     function<void(en_file_err err)> func_err = nullptr;//错误反馈
@@ -150,21 +157,22 @@ protected:
     void recover_passwd_back(const string& meg);    //找回密码反馈-c
     //请求服务器反馈
 
-
     void disconnect_txt(const string& meg);         //目标账号未连接--发送文字-c
     void disconnect_file(const string& meg);        //目标账号未连接--发送文件-c
     void disconnect(const string& meg);             //转发未连接
-
     void swap_txt(const string& meg);               //交换文字-c2
 
-
+    //接收方
     void swap_file_build(const string& meg);        //建立文件-c2
-    void swap_file_build_err(const string& meg);    //建立文件错误-c1
     void swap_file_send(const string& meg);         //发送文件段-c2
-    void swap_file_send_err(const string& meg);     //发送文件错误-c1
     void swap_file_finish(const string& meg);       //发送完成-c2
+
+    //发送方
+    void swap_file_build_err(const string& meg);    //建立文件错误-c1
+    void swap_file_send_err(const string& meg);     //发送文件错误-c1
     void swap_file_finish_err(const string& meg);   //发送完成-错误反馈-c1
     void swap_file_ret_err(const string& meg);      //接收文件完整性错误-c1
+    void swap_file_finish_back(const string& meg);       //发送完成-c2
     void swap_file_request(const string& meg);      //发送文件段请求-c2
     //===== 任务函数 =====
 
