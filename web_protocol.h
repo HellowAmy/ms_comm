@@ -21,7 +21,7 @@ static void to_ct(const std::string &str,T_ct &ct)
 
 
 
-//===== 网络传输数据结构 =====
+//===== 网络协议类型 =====
 //连接传输模式
 enum en_mode
 {
@@ -30,40 +30,48 @@ enum en_mode
     e_swap,         //交换数据
 };
 
-//连接传输模式--索引对应函数
-enum en_mode_index
-{
-    e_register,                 //注册请求-s
-    e_register_back,            //注册任务反馈-c
-    e_login,                    //登录请求-s
-    e_login_back,               //登录请求反馈-c
-    e_logout,                   //登出请求-s
-    e_logout_back,              //登出请求反馈-c
-    e_recover_passwd,           //找回密码-s
-    e_recover_passwd_back,      //找回密码反馈-c
-    e_disconnect_txt,           //目标账号未连接--发送文字-c
-    e_disconnect_file,          //目标账号未连接--发送文件-c
-    e_disconnect,               //转发未连接
-    e_swap_txt,                 //交换文字-c2
-    e_swap_file_build,          //建立文件-c2
-    e_swap_file_request,        //发送文件段请求-c2
-    e_swap_file_send,           //发送文件段-c2
-    e_swap_file_finish,         //发送完成-c2
-    e_swap_file_finish_back,    //发送完成-c2
-    e_swap_file_build_err,      //建立文件-错误反馈-c1
-    e_swap_file_send_err,       //发送文件段-错误反馈-c1
-    e_swap_file_finish_err,     //发送完成-错误反馈-c1
-    e_swap_file_ret_err,        //接收文件完整性错误-c1
-};
-
 //文件转发类型
 enum en_build_file
 {
     e_spic,     //图片表情包
-    e_file      //普通文件
+    e_file,     //普通文件
 };
 
+//文件转发类型
+enum en_swap_error
+{
+    e_error_disconnect,     //目标未连接:s->(c1,c2)
+    e_error_build,          //建立文件-错误反馈 :s->(c1)
+    e_error_send,           //发送文件段-错误反馈 :s->(c1)
+    e_error_request,        //发送文件段-错误反馈 :s->(c2)
+    e_error_finish,         //发送完成-错误反馈 :s->(c1)
+    e_error_finish_back,    //接收文件完整性错误 :s->(c2)
+};
 
+//连接传输模式--索引对应函数
+enum en_mode_index
+{
+    e_register,                 //注册请求:c->s
+    e_register_back,            //注册任务反馈:s->c
+    e_login,                    //登录请求:c->s
+    e_login_back,               //登录请求反馈:s->c
+    e_logout,                   //登出请求:c->s
+    e_logout_back,              //登出请求反馈:s->c
+    e_recover_passwd,           //找回密码:c->s
+    e_recover_passwd_back,      //找回密码反馈:s->c
+    e_swap_txt,                 //交换文字:c1->c2
+    e_swap_file_build,          //建立文件:c1->c2
+    e_swap_file_request,        //发送文件段请求:c2->c1
+    e_swap_file_send,           //发送文件段:c1->c2
+    e_swap_file_finish,         //发送完成:c1->c2
+    e_swap_file_ret,            //发送完成:c2->c1
+    e_swap_error,               //错误返回:all
+};
+//===== 网络协议类型 =====
+
+
+
+//===== 网络发送结构体协议类型 =====
 //CT_BUILD_MODE模板长度
 struct ct_head_mode
 {
@@ -119,15 +127,17 @@ struct ct_name                      \
 
 
 
+//==客户与服务器==
 //注册请求
 CT_BUILD_MODE(ct_register,
     char passwd[64];
+    char name[64];
 );
 
 //注册任务反馈  
 CT_BUILD_MODE(ct_register_back,
-    bool is_success;
     long long account;
+    bool is_success;
     char passwd[64];
 );
 
@@ -139,8 +149,8 @@ CT_BUILD_MODE(ct_login,
 
 //登录请求反馈
 CT_BUILD_MODE(ct_login_back,
-    bool is_success;
     long long account;
+    bool is_success;
 );
 
 //登出请求
@@ -150,8 +160,8 @@ CT_BUILD_MODE(ct_logout,
 
 //登出请求反馈
 CT_BUILD_MODE(ct_logout_back,
-    bool is_success;
     long long account;
+    bool is_success;
 );
 
 //找回密码
@@ -161,29 +171,14 @@ CT_BUILD_MODE(ct_recover_passwd,
 
 //找回密码反馈
 CT_BUILD_MODE(ct_recover_passwd_back,
-    bool is_success;
     long long account;
+    bool is_success;
     char passwd[64];
 );
+//==客户与服务器==
 
-//目标账号未连接--发送文字
-CT_BUILD_MODE(ct_disconnect_txt,
-    long long account_to;
-    char buf_txt[1024];
-);
 
-//目标账号未连接--发送文件
-CT_BUILD_MODE(ct_disconnect_file,
-    long long account_to;
-    char filename[255];
-);
-
-//转发未连接
-CT_BUILD_MODE(ct_disconnect,
-    long long account_to;
-    ct_head_mode head_info;
-);
-
+//==客户与客户==
 //交换文字
 CT_BUILD_SWAP(ct_swap_txt,
     long long account_from;
@@ -192,57 +187,10 @@ CT_BUILD_SWAP(ct_swap_txt,
 
 //建立文件
 CT_BUILD_SWAP(ct_swap_file_build,
-    en_build_file type;
     long long account_from;
     long long size_block;   //发送块大小
     long long size_file;    //文件总大小
-    char filename[255];
-);
-
-//建立文件错误
-CT_BUILD_SWAP(ct_swap_file_build_err,
-    long long account_from;
-    char filename[255];
-);
-
-//发送文件段
-CT_BUILD_SWAP(ct_swap_file_send,
-    bool is_next;
-    long long account_from;
-    long long off_file;     //当前文件偏移
-    long long size_buf;     //本次发送的真实字节
-    char filename[255];
-    char buf[4096];
-);
-
-//发送文件错误
-CT_BUILD_SWAP(ct_swap_file_send_err,
-    long long account_from;
-    char filename[255];
-);
-
-//发送完成
-CT_BUILD_SWAP(ct_swap_file_finish,
-    long long account_from;
-    char filename[255];
-);
-
-//发送完成反馈
-CT_BUILD_SWAP(ct_swap_file_finish_back,
-    long long account_from;
-    char filename[255];
-    bool is_ok;
-);
-
-//发送完成错误
-CT_BUILD_SWAP(ct_swap_file_finish_err,
-    long long account_from;
-    char filename[255];
-);
-
-//接收文件完整性错误
-CT_BUILD_SWAP(ct_swap_file_ret_err,
-    long long account_from;
+    en_build_file type;
     char filename[255];
 );
 
@@ -253,8 +201,37 @@ CT_BUILD_SWAP(ct_swap_file_request,
     char filename[255];
 );
 
+//发送文件段
+CT_BUILD_SWAP(ct_swap_file_send,
+    long long account_from;
+    long long off_file;     //当前文件偏移
+    long long size_buf;     //本次发送的真实字节
+    bool is_next;
+    char filename[255];
+    char buf[4096];
+);
 
-//===== 网络传输数据结构 =====
+//发送完成
+CT_BUILD_SWAP(ct_swap_file_finish,
+    long long account_from;
+    char filename[255];
+);
+
+//发送完成反馈
+CT_BUILD_SWAP(ct_swap_file_ret,
+    long long account_from;
+    bool is_success;
+    char filename[255];
+);
+
+//错误反馈
+CT_BUILD_SWAP(ct_swap_error,
+    long long account_from;
+    en_swap_error err;
+);
+//==客户与客户==
+
+//===== 网络发送结构体协议类型 =====
 
 
 #endif // WEB_PROTOCOL_H

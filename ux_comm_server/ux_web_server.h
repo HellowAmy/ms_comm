@@ -4,7 +4,6 @@
 #include "lib/web_sock/inter_sock.hpp"
 #include "../web_protocol.h"
 #include "lib/vts/vts.h"
-//#include "ux_protocol.h"
 #include "ux_manage.h"
 
 #include <iostream>
@@ -17,7 +16,6 @@
 #include <queue>
 #include <iostream>
 
-//using vts::vlog;
 using std::function;
 using std::unique_lock;
 using std::string;
@@ -44,17 +42,9 @@ using std::ref;
     <<">] <<<< "<<__VA_ARGS__<<endl
 //===== 日志宏 =====
 
-
-//===== 快速建立 =====
-#define map_task_add(en,func) \
-    map_task_func.insert(pair<en_mode_index,func_task> \
-        (en,bind(&ux_web_server::func,this,_1,_2)))
-//===== 快速建立 =====
-
-
 using func_task = function<void(const web_sock&, const string&)>;
 
-class ux_web_server //: public inter_server
+class ux_web_server
 {
 public:
     ux_web_server();
@@ -68,8 +58,8 @@ protected:
 
     //== 加入连接队列：登陆时记录登陆账号 ==
     std::mutex lock_connect;
-    map<long long,web_sock> map_connect;
-    map<web_sock,long long> map_connect_rm;//双向索引：加速查找
+    map<long long,web_sock> map_connect;//用账号索引sock
+    map<web_sock,long long> map_connect_rm;//双向索引：加速移除sock
     bool add_to_connect(const long long &account,const web_sock& sock);
     bool move_connect(const web_sock &sock);//关闭时的对象
     bool move_connect(const long long &account);//指定账号
@@ -86,9 +76,11 @@ protected:
     //===== 任务函数 =====
 
 
+    //== 网络函数回调 ==
     void on_open(const web_sock& sock, const web_http& http);
     void on_message(const web_sock& sock, const string& meg);
     void on_close(const web_sock& sock);
+    //== 网络函数回调 ==
 
 
     //加入账号数据库

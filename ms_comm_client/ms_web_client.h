@@ -2,11 +2,8 @@
 #define MS_WEB_CLIENT_H
 
 #include "lib/web_sock/inter_sock.hpp"
-//#include "ux_protocol.h"
 #include "ux_manage.h"
 #include "../web_protocol.h"
-
-//#include "lib/vts/vts.h"
 
 #include <string>
 #include <fstream>
@@ -46,8 +43,6 @@ using std::bind;
 //===== 日志宏 =====
 
 
-//register_back
-
 //===== 快速建立 =====
 #define map_task_add(func) \
     map_task_func.insert(pair<en_mode_index,func_task> \
@@ -58,14 +53,14 @@ using func_task = function<void(const string&)>;
 
 #define WRITE_BUFSIZE_HIGH_WATER (1U << 23)  // 8M
 
-//文件错误返回
-enum en_file_err
-{
-    e_file_open_err,
-    e_file_build_err,
-    e_file_send_err,
-    e_file_ret_err
-};
+////文件错误返回
+//enum en_file_err
+//{
+//    e_file_open_err,
+//    e_file_build_err,
+//    e_file_send_err,
+//    e_file_ret_err
+//};
 
 class ms_web_client : public inter_client
 {
@@ -114,7 +109,8 @@ public:
                        string filename,
                        string file_path,
                        en_build_file type);
-    //== 回调函数 ==
+
+    //===== 回调函数 =====
     function<void()> func_open = nullptr;
     function<void()> func_close = nullptr;
 
@@ -132,14 +128,14 @@ public:
     //交换反馈
     function<void(long long account_from,string txt)>
         func_swap_txt = nullptr;
-    function<void(long long account_from,string filename,bool is_ok)>
-        func_swap_file_finish_back = nullptr;
     function<void(long long account_from,string filename,en_build_file type,bool is_ok)>
         func_swap_file_finish = nullptr;
+    function<void(long long account_from,string filename,bool is_ok)>
+        func_swap_file_ret = nullptr;
+    function<void(long long account_from,en_swap_error err)>
+        func_swap_error = nullptr;
     //交换反馈
-
-    function<void(en_file_err err)> func_err = nullptr;//错误反馈
-    //== 回调函数 ==
+    //===== 回调函数 =====
 
 
 protected:
@@ -150,30 +146,23 @@ protected:
     map<en_mode_index,func_task> map_task_func;//任务函数
 
     //===== 任务函数 =====
-    //请求服务器反馈
+    //== 请求服务器反馈 ==
     void register_back(const string& meg);          //注册任务反馈-c
     void login_back(const string& meg);             //登录请求反馈-c
     void logout_back(const string& meg);            //登出请求反馈-c
     void recover_passwd_back(const string& meg);    //找回密码反馈-c
-    //请求服务器反馈
+    //== 请求服务器反馈 ==
 
-    void disconnect_txt(const string& meg);         //目标账号未连接--发送文字-c
-    void disconnect_file(const string& meg);        //目标账号未连接--发送文件-c
-    void disconnect(const string& meg);             //转发未连接
-    void swap_txt(const string& meg);               //交换文字-c2
+    //== 文件转发处理 ==
+    void swap_file_build(const string& meg);      //建立文件:c1->c2
+    void swap_file_request(const string& meg);    //发送文件段请求:c2->c1
+    void swap_file_send(const string& meg);       //发送文件段:c1->c2
+    void swap_file_finish(const string& meg);     //发送完成:c1->c2
+    void swap_file_ret(const string& meg);        //发送结果反馈:c2->c1
+    //== 文件转发处理 ==
 
-    //接收方
-    void swap_file_build(const string& meg);        //建立文件-c2
-    void swap_file_send(const string& meg);         //发送文件段-c2
-    void swap_file_finish(const string& meg);       //发送完成-c2
-
-    //发送方
-    void swap_file_build_err(const string& meg);    //建立文件错误-c1
-    void swap_file_send_err(const string& meg);     //发送文件错误-c1
-    void swap_file_finish_err(const string& meg);   //发送完成-错误反馈-c1
-    void swap_file_ret_err(const string& meg);      //接收文件完整性错误-c1
-    void swap_file_finish_back(const string& meg);       //发送完成-c2
-    void swap_file_request(const string& meg);      //发送文件段请求-c2
+    void swap_txt(const string& meg);//交换文字
+    void swap_error(const string& meg);//错误反馈
     //===== 任务函数 =====
 
     void on_open() override;
