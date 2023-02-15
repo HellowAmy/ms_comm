@@ -46,15 +46,16 @@ void ux_web_server::on_message(const web_sock &sock, const string &meg)
     //执行匹配的任务函数
     ct_head_mode ct;
     to_ct(meg,ct);
-    if(ct.type == en_mode::e_request) //进入应答函数
+
+    if(ct.type == en_mode::e_swap) //进入交换函数
+    { task_swap(sock,meg); }
+    else if(ct.type == en_mode::e_request) //进入应答函数
     {
         auto it_func = map_task_func.find(ct.func);
         if(it_func != map_task_func.end())
         { (std::bind(it_func->second,sock,meg))(); }
         else { vloge("it_func not find: e_request"); }
     }
-    else if(ct.type == en_mode::e_swap) //进入交换函数
-    { task_swap(sock,meg); }
     else //未发现协议
     { vloge("on_message not find: " vv(ct.type) vv(ct.func)); }
 }
@@ -196,9 +197,8 @@ void ux_web_server::task_swap(const web_sock &sock, const std::string &meg)
     {
         //转发数据,如果转发失败则反馈到数据发送者
         if(send_str(it->second,meg) == false)
-        { vloge("send_str to back: err" vv(ct.func)); }
-        else
         {
+            vloge("send_str err: " vv(ct.func));
             MAKE_CT_SWAP(ct_back,swap_error,ct.account_to);
             ct_back.err = en_swap_error::e_error_disconnect;
             ct_back.account_from = ct.account_to;

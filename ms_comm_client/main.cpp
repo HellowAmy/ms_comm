@@ -27,21 +27,20 @@ int main(int argc, char *argv[])
     {
         ms_web_client ms;
         ms.func_open = [&](){
-            cout<<"ask_login:"<<1045809651<<endl;
             ms.ask_login(1045809651,"123qwe");
         };
         ms.func_close = [&](){
             is_open = false;
-            cout<<"func_close"<<endl;
+            vlogf("func_close");
         };
         ms.func_login_back = [](long long account,bool ok){
-            cout<<"func_login_back:"<<account<<"|"<<ok<<endl;
+            vlogf("func_login_back:" vv(account) vv(ok));
         };
         ms.func_swap_txt = [](long long account,string txt){
-            cout<<"func_swap_txt:"<<account<<"|"<<txt<<endl;
+            vlogf("func_swap_txt:" vv(account) vv(txt));
         };
         ms.func_swap_file_finish = [](long long account,string filename,en_build_file type,bool is_ok){
-            cout<<"func_swap_file_finish:"<<account<<"|"<<filename<<"|"<<type<<"|"<<is_ok<<endl;
+            vlogd("func_swap_file_finish:" vv(account) vv(filename) vv(type) vv(is_ok) );
         };
 
         ms.open();
@@ -53,29 +52,28 @@ int main(int argc, char *argv[])
     {
         ms_web_client ms;
         ms.func_open = [&](){
-            cout<<"ask_login:"<<1934865572<<endl;
             ms.ask_login(1934865572,"123qwe");
         };
         ms.func_close = [&](){
             is_open = false;
-            cout<<"func_close"<<endl;
+            vlogf("func_close");
         };
         ms.func_login_back = [](long long account,bool ok){
-            cout<<"func_login_back:"<<account<<"|"<<ok<<endl;
+            vlogf("func_login_back:" vv(account) vv(ok));
         };
         ms.func_swap_txt = [](long long account,string txt){
-            cout<<"func_swap_txt:"<<account<<"|"<<txt<<endl;
+            vlogf("func_swap_txt:" vv(account) vv(txt));
         };
         ms.func_swap_file_ret = [](long long account,string filename,bool is_ok){
-            cout<<"func_swap_file_finish_back:"<<account<<"|"<<filename<<"|"<<is_ok<<endl;
+            vlogf("func_swap_file_ret:" vv(account) vv(filename) vv(is_ok) );
         };
 
         ms.open();
         while(is_open){
             int po;
-            cout<<"input number"<<endl;
+            cout<<"input number:"<<endl;
             cin>>po;
-            ms.ask_swap_file(1934865572,1045809651,"r1.exe","/home/red/open/home/123.exe",en_build_file::e_spic);
+            ms.ask_swap_file(1934865572,1045809651,"123tt.tar.gz","/home/red/open/tools/123.tar.gz",en_build_file::e_spic);
         }
 
         return 0;

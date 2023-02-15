@@ -74,6 +74,7 @@ public:
         long long size_file;    //文件总长度
         long long account_to;   //账号--目标-接收者
         long long account_from; //账号--来自-发送者
+        string insert_name;     //插入的文件索引
         fstream ofs;            //打开的文件对象
     };
 
@@ -86,6 +87,8 @@ public:
         long long size_file;    //文件总长度
         long long account_to;   //账号--目标-接收者
         long long account_from; //账号--来自-发送者
+        string insert_name;     //插入的文件索引
+        string filename;        //插入的文件索引法
         string save_path;       //保存路径
         fstream ofs;            //打开的文件对象
     };
