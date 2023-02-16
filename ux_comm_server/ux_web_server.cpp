@@ -46,6 +46,7 @@ void ux_web_server::on_message(const web_sock &sock, const string &meg)
     //执行匹配的任务函数
     ct_head_mode ct;
     to_ct(meg,ct);
+    vlogd("on_message: " vv(ct.func));
 
     if(ct.type == en_mode::e_swap) //进入交换函数
     { task_swap(sock,meg); }

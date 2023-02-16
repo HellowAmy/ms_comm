@@ -54,12 +54,16 @@ OBJECTS_DIR   = ./
 
 SOURCES       = ../main.cpp \
 		../ms_web_client.cpp \
+		../net_connect.cpp \
 		../ux_manage.cpp \
-		../widget.cpp moc_widget.cpp
+		../widget.cpp moc_net_connect.cpp \
+		moc_widget.cpp
 OBJECTS       = main.o \
 		ms_web_client.o \
+		net_connect.o \
 		ux_manage.o \
 		widget.o \
+		moc_net_connect.o \
 		moc_widget.o
 DIST          = ../lib/web_sock/README.md \
 		../lib/web_sock/lib/libhv.a \
@@ -349,9 +353,11 @@ DIST          = ../lib/web_sock/README.md \
 		../lib/web_sock/include/wsdef.h \
 		../lib/web_sock/inter_sock.hpp \
 		../ms_web_client.h \
+		../net_connect.h \
 		../ux_manage.h \
 		../widget.h ../main.cpp \
 		../ms_web_client.cpp \
+		../net_connect.cpp \
 		../ux_manage.cpp \
 		../widget.cpp
 QMAKE_TARGET  = ms_comm_client
@@ -805,8 +811,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents ../../../../app/Qt5.14.2/5.14.2/gcc_64/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../lib/web_sock/include/AsyncHttpClient.h ../lib/web_sock/include/Buffer.h ../lib/web_sock/include/Channel.h ../lib/web_sock/include/Event.h ../lib/web_sock/include/EventLoop.h ../lib/web_sock/include/EventLoopThread.h ../lib/web_sock/include/EventLoopThreadPool.h ../lib/web_sock/include/HttpContext.h ../lib/web_sock/include/HttpMessage.h ../lib/web_sock/include/HttpParser.h ../lib/web_sock/include/HttpResponseWriter.h ../lib/web_sock/include/HttpServer.h ../lib/web_sock/include/HttpService.h ../lib/web_sock/include/Status.h ../lib/web_sock/include/TcpClient.h ../lib/web_sock/include/TcpServer.h ../lib/web_sock/include/ThreadLocalStorage.h ../lib/web_sock/include/UdpClient.h ../lib/web_sock/include/UdpServer.h ../lib/web_sock/include/WebSocketChannel.h ../lib/web_sock/include/WebSocketClient.h ../lib/web_sock/include/WebSocketParser.h ../lib/web_sock/include/WebSocketServer.h ../lib/web_sock/include/axios.h ../lib/web_sock/include/base64.h ../lib/web_sock/include/hasync.h ../lib/web_sock/include/hatomic.h ../lib/web_sock/include/hbase.h ../lib/web_sock/include/hbuf.h ../lib/web_sock/include/hconfig.h ../lib/web_sock/include/hdef.h ../lib/web_sock/include/hdir.h ../lib/web_sock/include/hendian.h ../lib/web_sock/include/herr.h ../lib/web_sock/include/hexport.h ../lib/web_sock/include/hfile.h ../lib/web_sock/include/hlog.h ../lib/web_sock/include/hloop.h ../lib/web_sock/include/hmain.h ../lib/web_sock/include/hmap.h ../lib/web_sock/include/hmath.h ../lib/web_sock/include/hmutex.h ../lib/web_sock/include/hobjectpool.h ../lib/web_sock/include/hpath.h ../lib/web_sock/include/hplatform.h ../lib/web_sock/include/hproc.h ../lib/web_sock/include/hscope.h ../lib/web_sock/include/hsocket.h ../lib/web_sock/include/hssl.h ../lib/web_sock/include/hstring.h ../lib/web_sock/include/hsysinfo.h ../lib/web_sock/include/hthread.h ../lib/web_sock/include/hthreadpool.h ../lib/web_sock/include/htime.h ../lib/web_sock/include/http_client.h ../lib/web_sock/include/http_content.h ../lib/web_sock/include/httpdef.h ../lib/web_sock/include/hurl.h ../lib/web_sock/include/hv.h ../lib/web_sock/include/hversion.h ../lib/web_sock/include/ifconfig.h ../lib/web_sock/include/iniparser.h ../lib/web_sock/include/json.hpp ../lib/web_sock/include/md5.h ../lib/web_sock/include/nlog.h ../lib/web_sock/include/requests.h ../lib/web_sock/include/sha1.h ../lib/web_sock/include/singleton.h ../lib/web_sock/include/wsdef.h ../lib/web_sock/inter_sock.hpp ../ms_web_client.h ../ux_manage.h ../widget.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../main.cpp ../ms_web_client.cpp ../ux_manage.cpp ../widget.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../lib/web_sock/include/AsyncHttpClient.h ../lib/web_sock/include/Buffer.h ../lib/web_sock/include/Channel.h ../lib/web_sock/include/Event.h ../lib/web_sock/include/EventLoop.h ../lib/web_sock/include/EventLoopThread.h ../lib/web_sock/include/EventLoopThreadPool.h ../lib/web_sock/include/HttpContext.h ../lib/web_sock/include/HttpMessage.h ../lib/web_sock/include/HttpParser.h ../lib/web_sock/include/HttpResponseWriter.h ../lib/web_sock/include/HttpServer.h ../lib/web_sock/include/HttpService.h ../lib/web_sock/include/Status.h ../lib/web_sock/include/TcpClient.h ../lib/web_sock/include/TcpServer.h ../lib/web_sock/include/ThreadLocalStorage.h ../lib/web_sock/include/UdpClient.h ../lib/web_sock/include/UdpServer.h ../lib/web_sock/include/WebSocketChannel.h ../lib/web_sock/include/WebSocketClient.h ../lib/web_sock/include/WebSocketParser.h ../lib/web_sock/include/WebSocketServer.h ../lib/web_sock/include/axios.h ../lib/web_sock/include/base64.h ../lib/web_sock/include/hasync.h ../lib/web_sock/include/hatomic.h ../lib/web_sock/include/hbase.h ../lib/web_sock/include/hbuf.h ../lib/web_sock/include/hconfig.h ../lib/web_sock/include/hdef.h ../lib/web_sock/include/hdir.h ../lib/web_sock/include/hendian.h ../lib/web_sock/include/herr.h ../lib/web_sock/include/hexport.h ../lib/web_sock/include/hfile.h ../lib/web_sock/include/hlog.h ../lib/web_sock/include/hloop.h ../lib/web_sock/include/hmain.h ../lib/web_sock/include/hmap.h ../lib/web_sock/include/hmath.h ../lib/web_sock/include/hmutex.h ../lib/web_sock/include/hobjectpool.h ../lib/web_sock/include/hpath.h ../lib/web_sock/include/hplatform.h ../lib/web_sock/include/hproc.h ../lib/web_sock/include/hscope.h ../lib/web_sock/include/hsocket.h ../lib/web_sock/include/hssl.h ../lib/web_sock/include/hstring.h ../lib/web_sock/include/hsysinfo.h ../lib/web_sock/include/hthread.h ../lib/web_sock/include/hthreadpool.h ../lib/web_sock/include/htime.h ../lib/web_sock/include/http_client.h ../lib/web_sock/include/http_content.h ../lib/web_sock/include/httpdef.h ../lib/web_sock/include/hurl.h ../lib/web_sock/include/hv.h ../lib/web_sock/include/hversion.h ../lib/web_sock/include/ifconfig.h ../lib/web_sock/include/iniparser.h ../lib/web_sock/include/json.hpp ../lib/web_sock/include/md5.h ../lib/web_sock/include/nlog.h ../lib/web_sock/include/requests.h ../lib/web_sock/include/sha1.h ../lib/web_sock/include/singleton.h ../lib/web_sock/include/wsdef.h ../lib/web_sock/inter_sock.hpp ../ms_web_client.h ../net_connect.h ../ux_manage.h ../widget.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../main.cpp ../ms_web_client.cpp ../net_connect.cpp ../ux_manage.cpp ../widget.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -838,9 +844,109 @@ compiler_moc_predefs_clean:
 moc_predefs.h: ../../../../app/Qt5.14.2/5.14.2/gcc_64/mkspecs/features/data/dummy.cpp
 	g++ -pipe -g -std=gnu++11 -Wall -Wextra -dM -E -o moc_predefs.h ../../../../app/Qt5.14.2/5.14.2/gcc_64/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_widget.cpp
+compiler_moc_header_make_all: moc_net_connect.cpp moc_widget.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_widget.cpp
+	-$(DEL_FILE) moc_net_connect.cpp moc_widget.cpp
+moc_net_connect.cpp: ../net_connect.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/QObject \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qobject.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qobjectdefs.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qnamespace.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qglobal.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qconfig-bootstrapped.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qconfig.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qtcore-config.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qsystemdetection.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qprocessordetection.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qcompilerdetection.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qtypeinfo.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qsysinfo.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qlogging.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qflags.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qatomic.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qbasicatomic.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qatomic_bootstrap.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qgenericatomic.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qatomic_cxx11.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qatomic_msvc.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qglobalstatic.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qmutex.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qnumeric.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qversiontagging.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qobjectdefs_impl.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstring.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qchar.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qbytearray.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qrefcount.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qarraydata.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstringliteral.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstringalgorithms.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstringview.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstringbuilder.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qlist.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qalgorithms.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qiterator.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qhashfunctions.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qpair.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qvector.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qcontainertools_impl.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qpoint.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qbytearraylist.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstringlist.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qregexp.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstringmatcher.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qcoreevent.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qscopedpointer.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qmetatype.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qvarlengtharray.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qcontainerfwd.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qobject_impl.h \
+		../ms_web_client.h \
+		../lib/web_sock/inter_sock.hpp \
+		../lib/web_sock/include/WebSocketServer.h \
+		../lib/web_sock/include/HttpServer.h \
+		../lib/web_sock/include/hexport.h \
+		../lib/web_sock/include/HttpService.h \
+		../lib/web_sock/include/HttpMessage.h \
+		../lib/web_sock/include/hbase.h \
+		../lib/web_sock/include/hplatform.h \
+		../lib/web_sock/include/hconfig.h \
+		../lib/web_sock/include/hdef.h \
+		../lib/web_sock/include/hstring.h \
+		../lib/web_sock/include/hmap.h \
+		../lib/web_sock/include/hfile.h \
+		../lib/web_sock/include/hbuf.h \
+		../lib/web_sock/include/hpath.h \
+		../lib/web_sock/include/httpdef.h \
+		../lib/web_sock/include/http_content.h \
+		../lib/web_sock/include/json.hpp \
+		../lib/web_sock/include/HttpResponseWriter.h \
+		../lib/web_sock/include/Channel.h \
+		../lib/web_sock/include/hloop.h \
+		../lib/web_sock/include/hssl.h \
+		../lib/web_sock/include/hsocket.h \
+		../lib/web_sock/include/Buffer.h \
+		../lib/web_sock/include/HttpContext.h \
+		../lib/web_sock/include/WebSocketChannel.h \
+		../lib/web_sock/include/wsdef.h \
+		../lib/web_sock/include/hmath.h \
+		../lib/web_sock/include/WebSocketClient.h \
+		../lib/web_sock/include/TcpClient.h \
+		../lib/web_sock/include/hlog.h \
+		../lib/web_sock/include/EventLoopThread.h \
+		../lib/web_sock/include/EventLoop.h \
+		../lib/web_sock/include/hthread.h \
+		../lib/web_sock/include/Status.h \
+		../lib/web_sock/include/Event.h \
+		../lib/web_sock/include/ThreadLocalStorage.h \
+		../lib/web_sock/include/HttpParser.h \
+		../lib/web_sock/include/WebSocketParser.h \
+		../ux_manage.h \
+		../../web_protocol.h \
+		moc_predefs.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/bin/moc
+	/home/red/open/app/Qt5.14.2/5.14.2/gcc_64/bin/moc $(DEFINES) --include /home/red/open/github/ms_comm/ms_comm_client/build/moc_predefs.h -I/home/red/open/app/Qt5.14.2/5.14.2/gcc_64/mkspecs/linux-g++ -I/home/red/open/github/ms_comm/ms_comm_client -I/home/red/open/github/ms_comm/ms_comm_client/lib/web_sock/include -I/home/red/open/app/Qt5.14.2/5.14.2/gcc_64/include -I/home/red/open/app/Qt5.14.2/5.14.2/gcc_64/include/QtWidgets -I/home/red/open/app/Qt5.14.2/5.14.2/gcc_64/include/QtGui -I/home/red/open/app/Qt5.14.2/5.14.2/gcc_64/include/QtCore -I. -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../net_connect.h -o moc_net_connect.cpp
+
 moc_widget.cpp: ../widget.h \
 		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtWidgets/QWidget \
 		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtWidgets/qwidget.h \
@@ -1192,6 +1298,104 @@ ms_web_client.o: ../ms_web_client.cpp ../ms_web_client.h \
 		../../web_protocol.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ms_web_client.o ../ms_web_client.cpp
 
+net_connect.o: ../net_connect.cpp ../net_connect.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/QObject \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qobject.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qobjectdefs.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qnamespace.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qglobal.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qconfig-bootstrapped.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qconfig.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qtcore-config.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qsystemdetection.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qprocessordetection.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qcompilerdetection.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qtypeinfo.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qsysinfo.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qlogging.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qflags.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qatomic.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qbasicatomic.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qatomic_bootstrap.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qgenericatomic.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qatomic_cxx11.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qatomic_msvc.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qglobalstatic.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qmutex.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qnumeric.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qversiontagging.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qobjectdefs_impl.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstring.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qchar.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qbytearray.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qrefcount.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qarraydata.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstringliteral.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstringalgorithms.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstringview.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstringbuilder.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qlist.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qalgorithms.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qiterator.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qhashfunctions.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qpair.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qvector.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qcontainertools_impl.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qpoint.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qbytearraylist.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstringlist.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qregexp.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qstringmatcher.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qcoreevent.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qscopedpointer.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qmetatype.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qvarlengtharray.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qcontainerfwd.h \
+		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtCore/qobject_impl.h \
+		../ms_web_client.h \
+		../lib/web_sock/inter_sock.hpp \
+		../lib/web_sock/include/WebSocketServer.h \
+		../lib/web_sock/include/HttpServer.h \
+		../lib/web_sock/include/hexport.h \
+		../lib/web_sock/include/HttpService.h \
+		../lib/web_sock/include/HttpMessage.h \
+		../lib/web_sock/include/hbase.h \
+		../lib/web_sock/include/hplatform.h \
+		../lib/web_sock/include/hconfig.h \
+		../lib/web_sock/include/hdef.h \
+		../lib/web_sock/include/hstring.h \
+		../lib/web_sock/include/hmap.h \
+		../lib/web_sock/include/hfile.h \
+		../lib/web_sock/include/hbuf.h \
+		../lib/web_sock/include/hpath.h \
+		../lib/web_sock/include/httpdef.h \
+		../lib/web_sock/include/http_content.h \
+		../lib/web_sock/include/json.hpp \
+		../lib/web_sock/include/HttpResponseWriter.h \
+		../lib/web_sock/include/Channel.h \
+		../lib/web_sock/include/hloop.h \
+		../lib/web_sock/include/hssl.h \
+		../lib/web_sock/include/hsocket.h \
+		../lib/web_sock/include/Buffer.h \
+		../lib/web_sock/include/HttpContext.h \
+		../lib/web_sock/include/WebSocketChannel.h \
+		../lib/web_sock/include/wsdef.h \
+		../lib/web_sock/include/hmath.h \
+		../lib/web_sock/include/WebSocketClient.h \
+		../lib/web_sock/include/TcpClient.h \
+		../lib/web_sock/include/hlog.h \
+		../lib/web_sock/include/EventLoopThread.h \
+		../lib/web_sock/include/EventLoop.h \
+		../lib/web_sock/include/hthread.h \
+		../lib/web_sock/include/Status.h \
+		../lib/web_sock/include/Event.h \
+		../lib/web_sock/include/ThreadLocalStorage.h \
+		../lib/web_sock/include/HttpParser.h \
+		../lib/web_sock/include/WebSocketParser.h \
+		../ux_manage.h \
+		../../web_protocol.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o net_connect.o ../net_connect.cpp
+
 ux_manage.o: ../ux_manage.cpp ../ux_manage.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ux_manage.o ../ux_manage.cpp
 
@@ -1314,6 +1518,9 @@ widget.o: ../widget.cpp ../widget.h \
 		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtGui/qpen.h \
 		../../../../app/Qt5.14.2/5.14.2/gcc_64/include/QtGui/qtextoption.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o widget.o ../widget.cpp
+
+moc_net_connect.o: moc_net_connect.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_net_connect.o moc_net_connect.cpp
 
 moc_widget.o: moc_widget.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_widget.o moc_widget.cpp

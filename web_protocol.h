@@ -220,6 +220,7 @@ CT_BUILD_SWAP(ct_swap_file_finish,
 //发送完成反馈
 CT_BUILD_SWAP(ct_swap_file_ret,
     long long account_from;
+    en_build_file type;
     bool is_success;
     char filename[255];
 );

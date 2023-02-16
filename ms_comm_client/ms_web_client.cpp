@@ -1,9 +1,13 @@
 ﻿#include "ms_web_client.h"
 
+//===== 快速建立 =====
+#define map_task_add(func) \
+    map_task_func.insert(pair<en_mode_index,func_task> \
+        (en_mode_index::e_##func,bind(&ms_web_client::func,this,_1)))
+//===== 快速建立 =====
+
 ms_web_client::ms_web_client()
 {
-    set_file_path();
-
     //===== 添加任务函数到容器 =====
     map_task_add(register_back);            //注册任务反馈-c
     map_task_add(login_back);               //登录请求反馈-c
@@ -110,6 +114,7 @@ void ms_web_client::ask_swap_file
         ct_send.account_from = account_from;
         ct_send.account_to = account_to;
         ct_send.insert_name = to_string(account_to)+filename;
+        ct_send.save_path = file_path;
         ct_send.ofs = move(ofs);
 
         vlogf("ct: " vv(ct.account_from) vv(ct.head.account_to) vv(ct.filename));
@@ -160,10 +165,10 @@ BUILD_CT_BACK_FUNC(recover_passwd_back,
     ct.account,string(ct.passwd,sizeof(ct.passwd)),ct.is_success);
 
 BUILD_CT_BACK_FUNC(swap_txt,
-    ct.account_from,string(ct.buf_txt,sizeof(ct.buf_txt)));
+    ct.account_from,to_string(ct.buf_txt));
 
 BUILD_CT_BACK_FUNC(swap_file_ret,
-    ct.account_from,string(ct.filename,sizeof(ct.filename)),ct.is_success);
+    ct.account_from,string(ct.filename,sizeof(ct.filename)),ct.type,ct.is_success);
 
 BUILD_CT_BACK_FUNC(swap_error,
     ct.account_from,ct.err);
@@ -218,6 +223,10 @@ void ms_web_client::swap_file_send(const std::string &meg)
         io_recv *precv = &it->second;
         write_buf(&precv->ofs,ct.buf,ct.size_buf);
 
+        //进度条
+        if(func_prog_recv) func_prog_recv
+                (precv->save_path,precv->account_to,precv->ofs.tellg()*100/precv->size_file);
+
         //接收块完成，请求下一块
         if(ct.is_next == true)
         {
@@ -248,6 +257,7 @@ void ms_web_client::swap_file_finish(const std::string &meg)
         { ct_back.is_success = true;  }
         else { ct_back.is_success = false; }
 
+        ct_back.type = precv->type;
         ct_back.account_from = precv->account_from;
         strncpy(ct_back.filename,ct.filename,sizeof(ct_back.filename));
         send_str(to_str(ct_back));//反馈到发送方
@@ -297,6 +307,9 @@ void ms_web_client::swap_file_request(const std::string &meg)
                     ct_back.is_next = true;
                 else ct_back.is_next = false;
 
+                //进度条
+                if(func_prog_send) func_prog_send
+                        (psend->save_path,psend->account_to,psend->ofs.tellg()*100/psend->size_file);
                 if(ct_back.is_next) vlogf("off:" vv(psend->ofs.tellg()) vv(ct_back.size_buf));
 
                 send_str(to_str(ct_back));
@@ -311,6 +324,10 @@ void ms_web_client::swap_file_request(const std::string &meg)
                 ct_end.account_from = psend->account_from;
                 strncpy(ct_end.filename,ct.filename,sizeof(ct_end.filename));
                 send_str(to_str(ct_end));
+
+//                //结果反馈
+//                if(func_swap_file_ret) func_swap_file_ret
+//                        (psend->account_to,psend->save_path,psend->type,psend->ofs.eof());
 
                 //结束文件发送
                 psend->ofs.close();

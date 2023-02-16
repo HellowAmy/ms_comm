@@ -43,24 +43,11 @@ using std::bind;
 //===== 日志宏 =====
 
 
-//===== 快速建立 =====
-#define map_task_add(func) \
-    map_task_func.insert(pair<en_mode_index,func_task> \
-        (en_mode_index::e_##func,bind(&ms_web_client::func,this,_1)))
-//===== 快速建立 =====
+
 
 using func_task = function<void(const string&)>;
 
 #define WRITE_BUFSIZE_HIGH_WATER (1U << 23)  // 8M
-
-////文件错误返回
-//enum en_file_err
-//{
-//    e_file_open_err,
-//    e_file_build_err,
-//    e_file_send_err,
-//    e_file_ret_err
-//};
 
 class ms_web_client : public inter_client
 {
@@ -75,6 +62,7 @@ public:
         long long account_to;   //账号--目标-接收者
         long long account_from; //账号--来自-发送者
         string insert_name;     //插入的文件索引
+        string save_path;       //保存路径
         fstream ofs;            //打开的文件对象
     };
 
@@ -95,7 +83,7 @@ public:
 
 public:
     explicit ms_web_client();
-    void set_file_path(string path = "/home/red/test/");
+    void set_file_path(string path);
 
     void ask_register(string passwd);//注册请求
     void ask_login(long long account,string passwd);//登录请求
@@ -133,16 +121,21 @@ public:
         func_swap_txt = nullptr;
     function<void(long long account_from,string filename,en_build_file type,bool is_ok)>
         func_swap_file_finish = nullptr;
-    function<void(long long account_from,string filename,bool is_ok)>
+    function<void(long long account_from,string filename,en_build_file type,bool is_ok)>
         func_swap_file_ret = nullptr;
     function<void(long long account_from,en_swap_error err)>
         func_swap_error = nullptr;
     //交换反馈
+
+    //进度条
+    function<void(string filename,long long account_from,int now)> func_prog_send = nullptr;
+    function<void(string filename,long long account_from,int now)> func_prog_recv = nullptr;
+    //进度条
     //===== 回调函数 =====
 
 
 protected:
-    string v_path_files;
+    string v_path_files = "/home/red/test/";
 
     map<string,io_send> map_send;//文件名和文件状态--发送
     map<string,io_recv> map_recv;//文件名和文件状态--接收

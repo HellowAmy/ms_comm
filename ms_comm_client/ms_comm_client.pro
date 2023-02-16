@@ -20,6 +20,7 @@ SOURCES += \
     main.cpp \
     ms_web_client.cpp \
 #    net_connect.cpp \
+    net_connect.cpp \
     ux_manage.cpp \
     widget.cpp
 
@@ -97,6 +98,7 @@ HEADERS += \
     lib/web_sock/inter_sock.hpp \
     ms_web_client.h \
 #    net_connect.h \
+    net_connect.h \
     ux_manage.h \
 #    ux_protocol.h \
     widget.h
