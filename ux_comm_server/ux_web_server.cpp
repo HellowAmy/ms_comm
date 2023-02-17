@@ -150,7 +150,7 @@ BUILD_TASK_BACK_PO(register,
     { ct_back.is_success = false; vloge("add_to_account err"); }
 );
 
-//注册
+//登入
 BUILD_TASK_BACK_PO(login,
     ct_back.account = ct.account;
     ct_back.is_success = false;
@@ -199,14 +199,23 @@ void ux_web_server::task_swap(const web_sock &sock, const std::string &meg)
         //转发数据,如果转发失败则反馈到数据发送者
         if(send_str(it->second,meg) == false)
         {
-            vloge("send_str err: " vv(ct.func));
             MAKE_CT_SWAP(ct_back,swap_error,ct.account_to);
-            ct_back.err = en_swap_error::e_error_disconnect;
+            ct_back.err = en_swap_error::e_error_swap;
             ct_back.account_from = ct.account_to;
-            if(send_str(sock,meg) == false) { vloge("send_str err: en_swap_error"); }
+            if(send_str(sock,to_str(ct_back)) == false)
+            { vloge("send_str err: en_swap_error"); }
+            vloge("send_str err: " vv(ct.func));
         }
     }
-    else vlogw("task_swap not find" vv(meg));
+    else
+    {
+        MAKE_CT_SWAP(ct_back,swap_error,ct.account_to);
+        ct_back.err = en_swap_error::e_error_disconnect;
+        ct_back.account_from = ct.account_to;
+        if(send_str(sock,to_str(ct_back)) == false)
+        { vloge("send_str err: en_swap_error"); }
+        vlogw("task_swap not find" vv(ct.account_to) vv(ct.func));
+    }
 }
 
 //== 加入连接队列 ==

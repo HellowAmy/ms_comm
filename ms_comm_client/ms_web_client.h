@@ -78,6 +78,7 @@ public:
         string insert_name;     //插入的文件索引
         string filename;        //插入的文件索引法
         string save_path;       //保存路径
+        string send_path;       //发送方的路径
         fstream ofs;            //打开的文件对象
     };
 
@@ -119,6 +120,8 @@ public:
     //交换反馈
     function<void(long long account_from,string txt)>
         func_swap_txt = nullptr;
+    function<void(long long account_from,string filename,en_build_file type)>
+        func_swap_build = nullptr;
     function<void(long long account_from,string filename,en_build_file type,bool is_ok)>
         func_swap_file_finish = nullptr;
     function<void(long long account_from,string filename,en_build_file type,bool is_ok)>
@@ -135,7 +138,7 @@ public:
 
 
 protected:
-    string v_path_files = "/home/red/test/";
+    string v_path_files = "/tmp/comm_talk/";
 
     map<string,io_send> map_send;//文件名和文件状态--发送
     map<string,io_recv> map_recv;//文件名和文件状态--接收

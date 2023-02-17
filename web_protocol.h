@@ -41,6 +41,7 @@ enum en_build_file
 enum en_swap_error
 {
     e_error_disconnect,     //目标未连接:s->(c1,c2)
+    e_error_swap,           //转发失败:s->(c1,c2)
     e_error_build,          //建立文件-错误反馈 :s->(c1)
     e_error_send,           //发送文件段-错误反馈 :s->(c1)
     e_error_request,        //发送文件段-错误反馈 :s->(c2)
@@ -191,6 +192,7 @@ CT_BUILD_SWAP(ct_swap_file_build,
     long long size_block;   //发送块大小
     long long size_file;    //文件总大小
     en_build_file type;
+    char path[255];
     char filename[255];
 );
 

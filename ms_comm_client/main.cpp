@@ -3,6 +3,8 @@
 
 #include "ms_web_client.h"
 
+#include "net_connect.h"
+
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -13,6 +15,10 @@ map<string,fstream> map_o;
 
 int main(int argc, char *argv[])
 {
+
+//    QString ut;
+//    qtos(ut);
+
 //    if(argc < 2) { cout<<"argc < 2"<<endl; return -1;}
 
 //    bool is_open = true;

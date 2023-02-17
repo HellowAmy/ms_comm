@@ -81,9 +81,7 @@ void ms_web_client::ask_swap_txt(long long account_from, long long account_to, s
     MAKE_CT_SWAP(ct,swap_txt,account_to);
     ct.account_from = account_from;
     strncpy(ct.buf_txt,txt.c_str(),sizeof(ct.buf_txt));
-
-    if(send_str(to_str(ct)))
-    { vlogw("send err: ask_swap_txt"); }
+    send_str(to_str(ct));
 }
 
 void ms_web_client::ask_swap_file
@@ -102,6 +100,7 @@ void ms_web_client::ask_swap_file
         ct.size_block = WRITE_BUFSIZE_HIGH_WATER;//发送量达到高负载时停止
         ct.account_from = account_from;
         ct.type = type;
+        strncpy(ct.path,file_path.c_str(),sizeof(ct.path));
         strncpy(ct.filename,filename.c_str(),sizeof(ct.filename));
         ofs.seekg(0,ios::beg);
 
@@ -153,7 +152,7 @@ void ms_web_client::func(const std::string &meg)       \
 }
 
 BUILD_CT_BACK_FUNC(register_back,
-    ct.account,string(ct.passwd,sizeof(ct.passwd)),ct.is_success);
+    ct.account,to_string(ct.passwd),ct.is_success);
 
 BUILD_CT_BACK_FUNC(login_back,
     ct.account,ct.is_success);
@@ -162,13 +161,13 @@ BUILD_CT_BACK_FUNC(logout_back,
     ct.account,ct.is_success);
 
 BUILD_CT_BACK_FUNC(recover_passwd_back,
-    ct.account,string(ct.passwd,sizeof(ct.passwd)),ct.is_success);
+    ct.account,to_string(ct.passwd),ct.is_success);
 
 BUILD_CT_BACK_FUNC(swap_txt,
     ct.account_from,to_string(ct.buf_txt));
 
 BUILD_CT_BACK_FUNC(swap_file_ret,
-    ct.account_from,string(ct.filename,sizeof(ct.filename)),ct.type,ct.is_success);
+    ct.account_from,to_string(ct.filename),ct.type,ct.is_success);
 
 BUILD_CT_BACK_FUNC(swap_error,
     ct.account_from,ct.err);
@@ -188,6 +187,7 @@ void ms_web_client::swap_file_build(const std::string &meg)
     ct_flg.account_to = ct.account_from;
     ct_flg.account_from = ct.head.account_to;
     ct_flg.save_path = v_path_files + ct_flg.filename;
+    ct_flg.send_path = to_string(ct.path);
     ct_flg.insert_name = to_string(ct_flg.account_to) + ct_flg.filename;
 
     //打开文件
@@ -203,6 +203,9 @@ void ms_web_client::swap_file_build(const std::string &meg)
         MAKE_CT_SWAP(ct_back,swap_file_request,ct_flg.account_to);
         ct_back.account_from = ct_flg.account_from;
         strncpy(ct_back.filename,ct.filename,sizeof(ct_back.filename));
+
+        if(func_swap_build)
+            func_swap_build(ct.account_from,ct_flg.save_path,ct_flg.type);
 
         vlogf("open and insert: " vv(ct_flg.insert_name) vv(ct_flg.save_path));
         map_recv.insert(pair<string,io_recv>(ct_flg.insert_name,std::move(ct_flg)));
@@ -259,16 +262,13 @@ void ms_web_client::swap_file_finish(const std::string &meg)
 
         ct_back.type = precv->type;
         ct_back.account_from = precv->account_from;
-        strncpy(ct_back.filename,ct.filename,sizeof(ct_back.filename));
+        strncpy(ct_back.filename,precv->send_path.c_str(),sizeof(ct_back.filename));
         send_str(to_str(ct_back));//反馈到发送方
 
         //反馈到接收方
-        if(func_swap_file_finish)
-        {
-            func_swap_file_finish
-                    (precv->account_to,precv->save_path,
-                     precv->type,ct_back.is_success);
-        }
+        if(func_swap_file_finish) func_swap_file_finish
+                (precv->account_to,precv->save_path, precv->type,ct_back.is_success);
+
         precv->ofs.close();
         map_recv.erase(it);
         vlogd("io_recv close: " vv(ct_back.is_success) vv(precv->size_file) vv(precv->ofs.tellg()));
@@ -325,10 +325,6 @@ void ms_web_client::swap_file_request(const std::string &meg)
                 strncpy(ct_end.filename,ct.filename,sizeof(ct_end.filename));
                 send_str(to_str(ct_end));
 
-//                //结果反馈
-//                if(func_swap_file_ret) func_swap_file_ret
-//                        (psend->account_to,psend->save_path,psend->type,psend->ofs.eof());
-
                 //结束文件发送
                 psend->ofs.close();
                 map_send.erase(it);
@@ -353,6 +349,7 @@ void ms_web_client::on_message(const std::string &meg)
     //执行匹配的任务函数
     ct_head_mode ct;
     to_ct(meg,ct);
+    vlogd("on_message: " vv(ct.func));
     auto it_func = map_task_func.find(ct.func);
     if(it_func != map_task_func.end())
     { (std::bind(it_func->second,meg))(); }
