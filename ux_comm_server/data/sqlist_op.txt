@@ -123,7 +123,7 @@ select passwd from ac_pw where account_id=1234567892;
 create table ac_info (
     ac_id   integer         primary key     not null,
     pw      varchar(64)     not null,
-    name    archar(32)
+    name    varchar(32)
 );
 
 //==好友表
