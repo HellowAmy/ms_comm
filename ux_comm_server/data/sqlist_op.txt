@@ -1,0 +1,189 @@
+//== 系统操作 ==
+sqlite test.db                  //创建test.db文件并进入sqlite3
+sqlite>.database                //查看数据库文件信息命令(注意命令前带字符'.')
+sqlite>.schema                  //查看所有表的创建语句：
+sqlite>.schema table_name       //查看指定表的创建语句：
+sqlite>.dump table_name         //以sql语句的形式列出表内容：
+sqlite>.separator symble        //设置显示信息的分隔符：
+sqlite>.separator :             //设置显示信息以‘：'分隔
+sqlite>.mode mode_name          //设置显示模式：
+sqlite>.mode column             //默认为list，设置为column，其他模式可通过.help查看mode相关内
+sqlite>.help                    //输出帮助信息：
+sqlite>.width width_value       //设置每一列的显示宽度：
+sqlite>.width 2                 //设置宽度为2
+sqlite>.show                    //列出当前显示格式的配置
+sqlite>.quit 或 sqlite>.exit    //退出sqlite终端命令：
+//== 系统操作 ==
+
+
+//== 数据类型 ==
+//==基本
+NULL        //标识一个NULL值
+INTERGER    //整数类型
+REAL        //浮点数
+TEXT        //字符串
+BLOB        //二进制数
+
+//==扩展
+smallint            //16位整数
+integer             //32位整数
+decimal(p,s)        //p是精确值,s是小数位数
+float               //32位实数
+double              //64位实数
+char(n)             //n长度字符串，不能超过254
+varchar(n)          //长度不固定最大字符串长度为n，n不超过4000
+graphic(n)          //和 char(n) 一样，但是单位是两个字符double-bytes，n不超过127(中文字)
+vargraphic(n)       //可变长度且最大长度为n
+
+//==日期类型
+date 包含了年份、月份、日期
+time 包含了小时、分钟、秒
+timestamp 包含了年、月、日、时、分、秒、千分之一秒
+
+//==生成日期函数
+datetime()      //产生日期和时间
+date()          //产生日期
+time()          //产生时间
+strftime()      //对以上3个函数产生的日期和时间进行格式化
+//== 数据类型 ==
+
+
+//==约束
+NOT NULL        //确保某列不能有 NULL 值。
+DEFAULT         //当某列没有指定值时，为该列提供默认值。
+UNIQUE          //确保某列中的所有值是不同的。
+PRIMARY Key     //约束：唯一标识数据库表中的各行/记录。
+CHECK           //CHECK 约束确保某列中的所有值满足一定条件。
+FOREIGN KEY     //外键约束，需要父表字段存在
+
+
+//===== 基本操作 =====
+//==建表
+CREATE TABLE database_name.table_name(
+   column1 datatype  PRIMARY KEY(one or more columns),
+   column2 datatype,
+   column3 datatype,
+   .....
+   columnN datatype,
+);
+
+sqlite> CREATE TABLE COMPANY(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT    NOT NULL,
+   AGE            INT     NOT NULL,
+   ADDRESS        CHAR(50),
+   SALARY         REAL
+);
+
+//==外键约束
+create table persons
+(
+id_p integer not null,
+lastname varchar(20),
+firstname varchar(20),
+address varchar(100),
+city varchar(100),
+primary key(id_p)
+);
+
+create table orders
+(
+id_o integer not null,
+orderno not null,
+id_p integer,
+primary key(id_o),
+foreign key(id_p) references persons(id_p)
+);
+//==建表
+
+//==删除表
+DROP TABLE COMPANY;
+
+//==输出格式化
+.header on
+.mode column
+.timer on
+
+sqlite3 test.db         //打开数据库
+.schema                 //查看表和字段
+select * from ac_pw;    //查看表的所有字段  account_id select account_id,passwd from ac_pw;
+select passwd from ac_pw where account_id=1234567892;
+
+
+
+
+
+
+
+
+
+//===== 表设计 =====
+//==账号信息表
+（8位数字账号【主建】【非空】，64位字符密码【非空】，32位字符昵称）
+create table ac_info (
+    ac_id   integer         primary key     not null,
+    pw      varchar(64)     not null,
+    name    archar(32)
+);
+
+//==好友表
+（8位数字账号【外键】【非空】，不定长字符好友列表【外键】【不等于索引】）
+create table ac_friends (
+    ac_id       integer not null,
+    friends     integer ,
+    primary key (ac_id,friends),
+    foreign key(ac_id)      references ac_info(ac_id),
+    foreign key(friends)    references ac_info(ac_id),
+    check (ac_id != friends)
+);
+
+//==查看表内容
+select * from ac_info;
+select * from ac_friends;
+
+//==查看好友
+select * from ac_friends where ac_id==1234567891;
+select friends from ac_friends where ac_id==1234567891;
+
+//==插入数据
+insert into ac_info values(1234567890,'123qwe','nihao0');
+insert into ac_info values(1234567891,'123qwe','nihao1');
+insert into ac_info values(1234567892,'123qwe','nihao2');
+insert into ac_info values(1234567893,'123qwe','nihao3');
+insert into ac_info values(1234567894,'123qwe','nihao4');
+
+insert into ac_friends values(1234567890,1234567893);
+insert into ac_friends values(1234567890,1234567891);
+insert into ac_friends values(1234567890,1234567892);
+insert into ac_friends values(1234567891,1234567890);
+insert into ac_friends values(1234567891,1234567892);
+insert into ac_friends values(1234567891,1234567893);
+insert into ac_friends values(1234567892,1234567890);
+insert into ac_friends values(1234567892,1234567891);
+insert into ac_friends values(1234567892,1234567893);
+insert into ac_friends values(1234567893,1234567890);
+insert into ac_friends values(1234567893,1234567891);
+insert into ac_friends values(1234567893,1234567892);
+insert into ac_friends values(1234567893,1234567892);
+insert into ac_friends values(1234567893,1234567892);
+insert into ac_friends values(1234567893,1234567892);
+insert into ac_friends values(1234567893,1234567892);
+insert into ac_friends values(1234567893,1234567892);
+
+//事务
+begin;
+
+commit;
+
+//回滚
+rollback;
+
+//删除表
+#drop table ac_info;
+#drop table ac_friends;
+
+
+
+
+
+
