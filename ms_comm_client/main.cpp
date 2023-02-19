@@ -16,6 +16,20 @@ map<string,fstream> map_o;
 int main(int argc, char *argv[])
 {
 
+
+//    net_connect ms;
+
+//    connect(ms,)
+
+//    ms.open_connect();
+
+//    ms.ask_login();
+
+
+
+//    while(1){}
+
+
 //    QString ut;
 //    qtos(ut);
 

@@ -5,6 +5,7 @@
 #include "../web_protocol.h"
 #include "lib/vts/vts.h"
 #include "ux_manage.h"
+#include "data/inter_sqlist/inter_sqlist.h"
 
 #include <iostream>
 #include <map>
@@ -51,10 +52,9 @@ public:
     int open_server(int port = 5005,int th_count = 8);
 
 protected:
-    inter_server sock;
-
-    string file_account;//账号数据
-    map<long long,string> map_account;//已存在的账号密码
+    inter_server sock;//网络连接
+    inter_sqlist account_db;//账号信息数据库
+    string file_account;//账号信息数据库路径
 
     //== 加入连接队列：登陆时记录登陆账号 ==
     std::mutex lock_connect;
@@ -67,12 +67,14 @@ protected:
 
 
     //===== 任务函数 =====
-    map<en_mode_index,func_task> map_task_func;//任务函数
-    void task_register(const web_sock& sock, const string& meg);//账号注册
-    void task_login(const web_sock& sock, const string& meg);//登录请求
-    void task_logout(const web_sock& sock, const string& meg);//登出请求
-    void task_recover_passwd(const web_sock& sock, const string& meg);//忘记密码
-    void task_swap(const web_sock& sock, const string& meg);//数据交换
+    map<en_mode_index,func_task> map_task_func;                         //任务函数查询容器
+    void task_register(const web_sock& sock, const string& meg);        //账号注册
+    void task_login(const web_sock& sock, const string& meg);           //登录请求
+    void task_logout(const web_sock& sock, const string& meg);          //登出请求
+    void task_recover_passwd(const web_sock& sock, const string& meg);  //忘记密码
+    void task_friends_list(const web_sock& sock, const string& meg);    //好友列表
+    void task_swap(const web_sock& sock, const string& meg);            //数据交换
+    void task_add_ret(const web_sock& sock, const string& meg);         //好友申请
     //===== 任务函数 =====
 
 
@@ -83,10 +85,10 @@ protected:
     //== 网络函数回调 ==
 
 
-    //加入账号数据库
+    //注册账号加入数据库
     std::mutex lock_account;
-    bool add_to_account(const std::string &passwd, long long &ret_account);
-
+    bool add_to_account(const std::string &passwd,const std::string &name,
+                        long long &ret_account);
     //发送到客户端
     std::mutex lock_send;
     bool send_str(const web_sock &sock,const string &str);

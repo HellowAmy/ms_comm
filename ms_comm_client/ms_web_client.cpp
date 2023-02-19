@@ -13,7 +13,10 @@ ms_web_client::ms_web_client()
     map_task_add(login_back);               //登录请求反馈-c
     map_task_add(logout_back);              //登出请求反馈-c
     map_task_add(recover_passwd_back);      //找回密码反馈-c
+    map_task_add(friends_list_back);        //好友列表反馈-c
+    map_task_add(add_ret_back);             //申请结果反馈-c
     map_task_add(swap_txt);                 //交换文字:c1->c2
+    map_task_add(swap_add_friend);          //交换文字:c1->c2
     map_task_add(swap_file_build);          //建立文件:c1->c2
     map_task_add(swap_file_request);        //发送文件段请求:c2->c1
     map_task_add(swap_file_send);           //发送文件段:c1->c2
@@ -26,6 +29,9 @@ ms_web_client::ms_web_client()
 
 void ms_web_client::set_file_path(std::string path)
 { v_path_files = path; }
+
+std::string ms_web_client::get_file_path()
+{ return v_path_files; }
 
 
 
@@ -71,6 +77,16 @@ BUILD_CT_ASK_REQ(logout,IN_ARGS(long long account),
 BUILD_CT_ASK_REQ(recover_passwd,IN_ARGS(long long account),
     ct.account = account;
 );
+
+BUILD_CT_ASK_REQ(friends_list,IN_ARGS(long long account),
+    ct.account = account;
+);
+
+BUILD_CT_ASK_REQ(add_ret,IN_ARGS(long long account_from,long long account_to,bool is_agree),
+    ct.account_from = account_from;
+    ct.account_to = account_to;
+    ct.is_agree = is_agree;
+);
 //===== 快速建立请求函数 =====
 
 
@@ -81,6 +97,14 @@ void ms_web_client::ask_swap_txt(long long account_from, long long account_to, s
     MAKE_CT_SWAP(ct,swap_txt,account_to);
     ct.account_from = account_from;
     strncpy(ct.buf_txt,txt.c_str(),sizeof(ct.buf_txt));
+    send_str(to_str(ct));
+}
+
+void ms_web_client::ask_swap_add_friend(long long account_from,long long account_to)
+{
+    vlogd("send:ask_swap_friend");
+    MAKE_CT_SWAP(ct,swap_add_friend,account_to);
+    ct.account_from = account_from;
     send_str(to_str(ct));
 }
 
@@ -107,6 +131,7 @@ void ms_web_client::ask_swap_file
         //记录文件流状态
         io_send ct_send;
         ct_send.is_send = true;
+        ct_send.prog_now = 0;
         ct_send.type = type;
         ct_send.size_block = ct.size_block;
         ct_send.size_file = ct.size_file;
@@ -163,11 +188,20 @@ BUILD_CT_BACK_FUNC(logout_back,
 BUILD_CT_BACK_FUNC(recover_passwd_back,
     ct.account,to_string(ct.passwd),ct.is_success);
 
+BUILD_CT_BACK_FUNC(friends_list_back,
+    ct.account,to_string(ct.name),ct.is_end);
+
 BUILD_CT_BACK_FUNC(swap_txt,
     ct.account_from,to_string(ct.buf_txt));
 
+BUILD_CT_BACK_FUNC(swap_add_friend,
+    ct.account_from);
+
 BUILD_CT_BACK_FUNC(swap_file_ret,
     ct.account_from,to_string(ct.filename),ct.type,ct.is_success);
+
+BUILD_CT_BACK_FUNC(add_ret_back,
+    ct.account_from,ct.is_agree,ct.is_self);
 
 BUILD_CT_BACK_FUNC(swap_error,
     ct.account_from,ct.err);
@@ -195,6 +229,7 @@ void ms_web_client::swap_file_build(const std::string &meg)
     if(ofs.is_open())
     {
         ct_flg.is_send = true;
+        ct_flg.prog_now = 0;
         ct_flg.type = ct.type;
         ct_flg.size_block = ct.size_block;
         ct_flg.size_file = ct.size_file;
@@ -227,8 +262,12 @@ void ms_web_client::swap_file_send(const std::string &meg)
         write_buf(&precv->ofs,ct.buf,ct.size_buf);
 
         //进度条
-        if(func_prog_recv) func_prog_recv
-                (precv->save_path,precv->account_to,precv->ofs.tellg()*100/precv->size_file);
+        if((precv->ofs.tellg()*100/precv->size_file) > precv->prog_now
+                && func_prog_recv)
+        {
+            precv->prog_now++;
+            func_prog_recv(precv->save_path,precv->account_to,precv->prog_now);
+        }
 
         //接收块完成，请求下一块
         if(ct.is_next == true)
@@ -308,8 +347,12 @@ void ms_web_client::swap_file_request(const std::string &meg)
                 else ct_back.is_next = false;
 
                 //进度条
-                if(func_prog_send) func_prog_send
-                        (psend->save_path,psend->account_to,psend->ofs.tellg()*100/psend->size_file);
+                if((psend->ofs.tellg()*100/psend->size_file) > psend->prog_now
+                        && func_prog_send)
+                {
+                    psend->prog_now++;
+                    func_prog_send(psend->save_path,psend->account_to,psend->prog_now);
+                }
                 if(ct_back.is_next) vlogf("off:" vv(psend->ofs.tellg()) vv(ct_back.size_buf));
 
                 send_str(to_str(ct_back));
@@ -349,7 +392,7 @@ void ms_web_client::on_message(const std::string &meg)
     //执行匹配的任务函数
     ct_head_mode ct;
     to_ct(meg,ct);
-    vlogd("on_message: " vv(ct.func));
+
     auto it_func = map_task_func.find(ct.func);
     if(it_func != map_task_func.end())
     { (std::bind(it_func->second,meg))(); }

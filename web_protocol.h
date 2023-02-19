@@ -60,7 +60,12 @@ enum en_mode_index
     e_logout_back,              //登出请求反馈:s->c
     e_recover_passwd,           //找回密码:c->s
     e_recover_passwd_back,      //找回密码反馈:s->c
+    e_friends_list,             //好友列表请求:c->s
+    e_friends_list_back,        //好友列表请求反馈:s->c
+    e_add_ret,                  //好友申请结果:c2->s
+    e_add_ret_back,             //好友申请结果反馈:s->c1
     e_swap_txt,                 //交换文字:c1->c2
+    e_swap_add_friend,          //好友添加请求:c1->c2
     e_swap_file_build,          //建立文件:c1->c2
     e_swap_file_request,        //发送文件段请求:c2->c1
     e_swap_file_send,           //发送文件段:c1->c2
@@ -176,6 +181,32 @@ CT_BUILD_MODE(ct_recover_passwd_back,
     bool is_success;
     char passwd[64];
 );
+
+//好友列表请求
+CT_BUILD_MODE(ct_friends_list,
+    long long account;
+);
+
+//好友列表请求反馈
+CT_BUILD_MODE(ct_friends_list_back,
+    bool is_end;
+    long long account;
+    char name[64];
+);
+
+//好友添加请求结果
+CT_BUILD_MODE(ct_add_ret,
+    long long account_from;
+    long long account_to;
+    bool is_agree;
+);
+
+//好友添加请求结果
+CT_BUILD_MODE(ct_add_ret_back,
+    long long account_from;
+    bool is_agree;
+    bool is_self;
+);
 //==客户与服务器==
 
 
@@ -184,6 +215,11 @@ CT_BUILD_MODE(ct_recover_passwd_back,
 CT_BUILD_SWAP(ct_swap_txt,
     long long account_from;
     char buf_txt[1024];
+);
+
+//好友添加请求
+CT_BUILD_SWAP(ct_swap_add_friend,
+    long long account_from;
 );
 
 //建立文件

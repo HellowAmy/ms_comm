@@ -5,17 +5,20 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += \
+        data/inter_sqlist/inter_sqlist.cpp \
         lib/vts/vts.cpp \
         main.cpp \
         ux_manage.cpp \
         ux_web_server.cpp
 
+LIBS += -lsqlite3
 #DISTFILES += \
 #    data/account.txt \
 #    lib/web_sock/lib/libhv.a \
 #    lib/web_sock/lib/libhv.so
 
 HEADERS += \
+    data/inter_sqlist/inter_sqlist.h \
     lib/vts/vts.h \
     lib/web_sock/include/AsyncHttpClient.h \
     lib/web_sock/include/Buffer.h \

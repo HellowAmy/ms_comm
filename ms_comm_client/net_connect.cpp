@@ -5,7 +5,13 @@
 
 net_connect::net_connect(QObject *parent) : QObject(parent)
 {
+    QDir dir(qfrs(ms.get_file_path()));
+    if(dir.exists() == false) dir.mkpath(qfrs(ms.get_file_path()));
+
+    //注册Qt的信号槽类型支持
     qRegisterMetaType<en_build_file>("en_build_file");
+    qRegisterMetaType<QMap<long long,string>>("QMap<long long,string>");
+    qRegisterMetaType<en_swap_error>("en_swap_error");
 
     ms.func_open = [=](){ emit fa_open(); };
 
@@ -23,8 +29,19 @@ net_connect::net_connect(QObject *parent) : QObject(parent)
     ms.func_recover_passwd_back = [=](long long account,string passwd,bool ok)
     { emit fa_recover_passwd_back(account,qfrs(passwd),ok); };
 
+    ms.func_friends_list_back = [=](long long account,string name,bool end) //容器会连续接收信息
+    { if(end){emit fa_friends_list_back(map);} else{map.insert(account,name);} };
+
+    ms.func_add_ret_back= [=](long long account,bool ok,bool self)
+    { emit fa_add_ret_back(account,ok,self); };
+
+
+    //== 交换部分 ==
     ms.func_swap_txt = [=](long long account_from,string txt)
-    { vlogf(vv(account_from) vv(txt)); emit fa_swap_txt(account_from,qfrs(txt)); };
+    { emit fa_swap_txt(account_from,qfrs(txt)); };
+
+    ms.func_swap_add_friend = [=](long long account_from)
+    { emit fa_swap_add_friend(account_from); };
 
     ms.func_swap_build = [=](long long account_from,string filename,en_build_file type)
     { vlogf(vv(account_from) vv(filename)); emit fa_swap_build(account_from,qfrs(filename),type); };
@@ -35,7 +52,6 @@ net_connect::net_connect(QObject *parent) : QObject(parent)
     ms.func_swap_file_ret = [=](long long account_from,string filename,en_build_file type,bool is_ok)
     { emit fa_swap_file_ret(account_from,qfrs(filename),type,is_ok); };
 
-    qRegisterMetaType<en_swap_error>("en_swap_error");
     ms.func_swap_error = [=](long long account_from,en_swap_error err)
     { emit fa_swap_error(account_from,err); };
 
@@ -74,6 +90,15 @@ void net_connect::ask_logout()
 
 void net_connect::ask_recover_passwd(long long account)
 { ms.ask_recover_passwd(account); }
+
+void net_connect::ask_friends_list(long long account)
+{ ms.ask_friends_list(account); }
+
+void net_connect::ask_add_ret(long long account_to, bool is_agree)
+{ ms.ask_add_ret(v_account,account_to,is_agree); }
+
+void net_connect::ask_swap_add_friend(long long account_to)
+{ ms.ask_swap_add_friend(v_account,account_to); }
 
 void net_connect::ask_swap_txt(long long account_to, QString txt)
 { ms.ask_swap_txt(v_account,account_to,qtos(txt)); }

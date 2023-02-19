@@ -122,7 +122,7 @@ select passwd from ac_pw where account_id=1234567892;
 （8位数字账号【主建】【非空】，64位字符密码【非空】，32位字符昵称）
 create table ac_info (
     ac_id   integer         primary key     not null,
-    pw      varchar(64)     not null,
+    passwd  varchar(64)     not null,
     name    varchar(32)
 );
 
@@ -137,9 +137,29 @@ create table ac_friends (
     check (ac_id != friends)
 );
 
-//==查看表内容
+//查看
 select * from ac_info;
 select * from ac_friends;
+
+select ac_id from ac_info;
+
+select * from ac_friends where ac_id==5045599804; 
+select * from ac_friends where ac_id==4184987844;
+
+select * from ac_info where ac_id==1234567892;
+select friends from ac_friends where ac_id==1234567896;
+select * from ac_info where ac_id==1234567895;
+select friends from ac_friends;
+
+
+//删除一条信息
+delete from ac_friends where ac_id==5045599804;
+delete from ac_friends where ac_id==4184987844;
+
+7509541065
+
+//修改
+update from ac_info where passwd==1234567890;
 
 //==查看好友
 select * from ac_friends where ac_id==1234567891;
@@ -179,8 +199,8 @@ commit;
 rollback;
 
 //删除表
-#drop table ac_info;
-#drop table ac_friends;
+drop table ac_info;
+drop table ac_friends;
 
 
 
