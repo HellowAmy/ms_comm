@@ -143,6 +143,10 @@ select * from ac_friends;
 
 select ac_id from ac_info;
 
+
+
+7515088773|123456|刘德华
+
 select * from ac_friends where ac_id==5045599804; 
 select * from ac_friends where ac_id==4184987844;
 
