@@ -267,6 +267,7 @@ CT_BUILD_SWAP(ct_swap_file_ret,
 CT_BUILD_SWAP(ct_swap_error,
     long long account_from;
     en_swap_error err;
+    en_mode_index swap_func;
 );
 //==客户与客户==
 

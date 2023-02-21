@@ -3,9 +3,9 @@
 
 #include "lib/web_sock/inter_sock.hpp"
 #include "../web_protocol.h"
-#include "lib/vts/vts.h"
+//#include "lib/vts/vts.h"
 #include "ux_manage.h"
-#include "data/inter_sqlist/inter_sqlist.h"
+#include "inter_sqlist.h"
 
 #include <iostream>
 #include <map>
@@ -59,7 +59,7 @@ protected:
     //== 加入连接队列：登陆时记录登陆账号 ==
     std::mutex lock_connect;
     map<long long,web_sock> map_connect;//用账号索引sock
-    map<web_sock,long long> map_connect_rm;//双向索引：加速移除sock
+    map<web_sock,long long> map_connect_rm;//双向索引：加速移除
     bool add_to_connect(const long long &account,const web_sock& sock);
     bool move_connect(const web_sock &sock);//关闭时的对象
     bool move_connect(const long long &account);//指定账号

@@ -74,8 +74,8 @@ void net_connect::close_connect()
 void net_connect::set_file_path(QString path)
 { ms.set_file_path(qtos(path)); }
 
-void net_connect::ask_register(QString passwd)
-{ ms.ask_register(qtos(passwd)); }
+void net_connect::ask_register(QString passwd,QString name)
+{ ms.ask_register(qtos(passwd),qtos(name)); }
 
 void net_connect::ask_login(long long account,QString passwd)
 {

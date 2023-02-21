@@ -20,11 +20,11 @@ ux_web_server::ux_web_server()
     //加载账号数据
     file_account = "../data/account_info.db";
     if(account_db.open_db(file_account) == false)
-        { vloge("load_account error: " vv(file_account)); };
+    { vloge("load_account error: " vv(file_account)); };
 
     //===== 添加任务函数到容器 =====
     MAP_TASK_ADD(register);//账号注册
-    MAP_TASK_ADD(login);//登录请求
+    MAP_TASK_ADD(login);//登录请求名
     MAP_TASK_ADD(logout);//登出请求
     MAP_TASK_ADD(recover_passwd);//忘记密码
     MAP_TASK_ADD(friends_list);//好友列表
@@ -55,7 +55,7 @@ void ux_web_server::on_message(const web_sock &sock, const string &meg)
         auto it_func = map_task_func.find(ct.func);
         if(it_func != map_task_func.end())
         { (std::bind(it_func->second,sock,meg))(); }
-        else { vloge("it_func not find: e_request"); }
+        else { vloge("not find func: e_request func"); }
     }
     else //未发现协议
     { vloge("on_message not find: " vv(ct.type) vv(ct.func)); }
@@ -65,7 +65,7 @@ void ux_web_server::on_close(const web_sock &sock)
 {
     vlogd("on_close");
     if(move_connect(sock) == false)
-    { vloge("move failed: " vv((map_connect_rm.find(sock))->second)); };
+    { vlogw("move failed: " vv((map_connect_rm.find(sock))->second)); };
 }
 
 bool ux_web_server::move_connect(const web_sock &sock)
@@ -84,6 +84,7 @@ bool ux_web_server::move_connect(const web_sock &sock)
             is_ok = true;
             vlogd(vv(map_connect.size()) vv(map_connect_rm.size()));
         }
+        else vloge("find err: connect map number not equals");
     }
     return is_ok;
 }
@@ -141,13 +142,14 @@ void ux_web_server::task_##func                         \
 
 //注册
 BUILD_TASK_BACK_PO(register,
+    vlogd(vv(ct.passwd) vv(ct.name));
     if(add_to_account(to_string(ct.passwd),to_string(ct.name),ct_back.account))
     {
         strncpy(ct_back.passwd,ct.passwd,sizeof(ct.passwd));
         ct_back.is_success = true;              
     }
     else
-    { ct_back.is_success = false; vloge("add_to_account err"); }
+    { ct_back.is_success = false; vlogw("add_to_account err"); }
     vlogd("task_register: " vv(ct_back.account) vv(ct.name) vv(ct_back.is_success));
 );
 
@@ -165,6 +167,7 @@ BUILD_TASK_BACK_PO(login,
         { ct_back.is_success = true; }
     }
     else vlogw("not find: " vv(ct.account));
+    vlogd("login: " vv(ct.account) vv(ct_back.is_success));
 );
 
 //登出
@@ -175,6 +178,7 @@ BUILD_TASK_BACK_PO(logout,
         ct_back.is_success = true;
     }
     else { ct_back.is_success = false; }
+    vlogd("logout: " vv(ct_back.is_success));
 );
 
 //忘记密码
@@ -186,10 +190,12 @@ BUILD_TASK_BACK_PO(recover_passwd,
         ct_back.is_success = true;
         strncpy(ct_back.passwd,temp.passwd.c_str(),sizeof(ct_back.passwd));
     }
+    vlogd("recover_passwd: " vv(ct_back.account) vv(ct_back.is_success));
 );
 
 //好友列表
 BUILD_TASK_BACK_PO(friends_list,
+
     //连续发送: n-1 (总数减1)
     vector<long long> vec = account_db.select_friends(ct.account);
     ct_back.is_end = false;
@@ -205,6 +211,28 @@ BUILD_TASK_BACK_PO(friends_list,
         }
     }
     ct_back.is_end = true;//发送结束标记
+);
+
+//好友申请
+BUILD_TASK_BACK_PO(add_ret,
+    ct_back.account_from = ct.account_from;
+    ct_back.is_agree = ct.is_agree;
+    ct_back.is_self = false;
+
+    //插入数据库--这里应该启用数据库的事务以防止插入失败时回滚
+    auto it = map_connect.find(ct.account_to);
+    if(ct.is_agree && (it != map_connect.end()))
+    {
+        if(account_db.insert_ac_friends(ct.account_from,ct.account_to) == false)
+        { vloge("insert_ac_friends err"); }
+
+        if(account_db.insert_ac_friends(ct.account_to,ct.account_from) == false)
+        { vloge("insert_ac_friends err"); }
+    }
+
+    //同时反馈到申请方（双方都会接收到消息并更新好友）
+    if(send_str(it->second,to_str(ct_back)) == false)
+    { vlogw("send_str err"); }
 );
 //===== 反馈函数快速宏 =====
 
@@ -222,56 +250,25 @@ void ux_web_server::task_swap(const web_sock &sock, const std::string &meg)
         //转发数据,如果转发失败则反馈到数据发送者
         if(send_str(it->second,meg) == false)
         {
+            vloge("send_str err: " vv(ct.func));
             MAKE_CT_SWAP(ct_back,swap_error,ct.account_to);
             ct_back.err = en_swap_error::e_error_swap;
+            ct_back.swap_func = ct.func;
             ct_back.account_from = ct.account_to;
             if(send_str(sock,to_str(ct_back)) == false)
             { vloge("send_str err: en_swap_error"); }
-            vloge("send_str err: " vv(ct.func));
         }
     }
     else
     {
         MAKE_CT_SWAP(ct_back,swap_error,ct.account_to);
         ct_back.err = en_swap_error::e_error_disconnect;
+        ct_back.swap_func = ct.func;
         ct_back.account_from = ct.account_to;
         if(send_str(sock,to_str(ct_back)) == false)
         { vloge("send_str err: en_swap_error"); }
         vlogw("task_swap not find" vv(ct.account_to) vv(ct.func));
     }
-}
-
-//好友申请
-void ux_web_server::task_add_ret(const web_sock& sock, const string& meg)
-{
-    vlogf("task_add_ret");
-    ct_add_ret ct;
-    MAKE_CT_RES(ct_back,add_ret_back);
-    to_ct(meg,ct);
-
-    ct_back.account_from = ct.account_from;
-    ct_back.is_agree = ct.is_agree;
-    ct_back.is_self = false;
-
-    //插入数据库--这里应该启用数据库的事务以防止插入失败时回滚
-    auto it = map_connect.find(ct.account_to);
-    if(ct.is_agree && (it != map_connect.end()))
-    {
-        if(account_db.insert_ac_friends(ct.account_from,ct.account_to) == false)
-        { vloge("insert_ac_friends err"); }
-
-        if(account_db.insert_ac_friends(ct.account_to,ct.account_from) == false)
-        { vloge("insert_ac_friends err"); }
-    }
-
-    //反馈到申请方
-    if(send_str(it->second,to_str(ct_back)) == false)
-    { vloge("send_str err"); }
-
-    //反馈到接收方
-    ct_back.is_self = true;
-    if(send_str(sock,to_str(ct_back)) == false)
-    { vloge("send_str err"); }
 }
 
 //== 加入连接队列 ==

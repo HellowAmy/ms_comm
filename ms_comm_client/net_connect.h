@@ -20,7 +20,7 @@ public:
     bool get_status();
     void close_connect();
     void set_file_path(QString path);
-    void ask_register(QString passwd);                      //注册请求
+    void ask_register(QString passwd,QString name);         //注册请求
     void ask_login(long long account,QString passwd);       //登录请求
     void ask_logout();                                      //登出请求
     void ask_recover_passwd(long long account);             //找回密码

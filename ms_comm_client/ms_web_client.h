@@ -43,8 +43,6 @@ using std::bind;
 //===== 日志宏 =====
 
 
-
-
 using func_task = function<void(const string&)>;
 
 #define WRITE_BUFSIZE_HIGH_WATER (1U << 23)  // 8M
@@ -89,7 +87,7 @@ public:
     void set_file_path(string path);
     string get_file_path();
 
-    void ask_register(string passwd);                   //注册请求
+    void ask_register(string passwd,std::string name);  //注册请求
     void ask_login(long long account,string passwd);    //登录请求
     void ask_logout(long long account);                 //登出请求
     void ask_recover_passwd(long long account);         //找回密码
